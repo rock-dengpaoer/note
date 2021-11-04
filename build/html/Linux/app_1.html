@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="zh-CN" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>软件运行分析 &mdash; linux学习笔记  文档</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/translations.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="软件安装" href="app_2.html" />
+    <link rel="prev" title="Welcome to linux学习笔记’s documentation!" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> linux学习笔记
+            <img src="../_static/logo.jpg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="在文档中搜索" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Linux:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">软件运行分析</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">机器语言程序</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">操作系统</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">应用程序</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#linux">linux启动流程分析</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="app_2.html">软件安装</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">rt_thread内核:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../rt_thread/thread.html">线程</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rt_thread/timer.html">时钟管理</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rt_thread/Synchronize.html">线程间同步</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">DDS:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Fast_DDS/Fast_DDS_1.html">Fast-DDS</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">网站搭建:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../web/web_1.html">内网网站搭建</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">杂项:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Other/Sphinx_Tutorials.html">sphinx安装与使用</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Other/Sphinx_Tutorials.html#id14">sphinx简明教程</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Other/Sphinx_Tutorials.html#id15">sphinx使用时需要注意的问题</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">周报</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Data/Data_weekly.html">2021-10</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">linux学习笔记</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>软件运行分析</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/Linux/app_1.rst.txt" rel="nofollow"> 查看页面源码</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="id1">
+<h1>软件运行分析<a class="headerlink" href="#id1" title="永久链接至标题"></a></h1>
+<div class="section" id="id2">
+<h2>机器语言程序<a class="headerlink" href="#id2" title="永久链接至标题"></a></h2>
+<p>电脑只认识0和1，而且电脑最重要的运算与逻辑判断是在CPU内部，而CPU具有指令集。</p>
+<p>因此，需要CPU工作时，就要参考指令集的内容，然后编写让CPU能读懂的脚本给CPU执行。</p>
+<p>编译器让人类写的程序语言转译成机器能看懂的机器码</p>
+</div>
+<div class="section" id="id3">
+<h2>操作系统<a class="headerlink" href="#id3" title="永久链接至标题"></a></h2>
+<p>操作系统其实也是一组程序，这组程序的重点在于管理电脑的所有活动以及驱动系统中的所有硬件。</p>
+<p>只有内核提供的功能，你的电脑系统才能帮你完成。</p>
+<p>内核主要在管理硬件与提供相关的功能（例如读写硬盘、网络功能、CPU资源分配等）</p>
+<p>内核程序放置到内存当中的区块是受保护的，并且启动后就一直常驻在内存当中。</p>
+<p>应用程序编程接口（API）</p>
+<p>只要硬件不同，内核就得要进行修改。</p>
+<p>为了保护内核，并且能够让程序员比较容易开发软件，操作系统出了内核程序之外，通常还会提供一套API，那就是系统调用层。程序员只要遵循公认的系统调用参数来开发软件，该软件就能够在该内核上运行。</p>
+<p>一些概念
+- 操作系统下的内核层直接参考硬件规格写成，所以同一个操作系统程序不能够在不一样的硬件程序下运行。
+- 操作系统只是管理整个硬件资源，包括CPU、内存、输入输出设备及文件系统等。
+- 应用程序的开发都是参考操作系统提供的API，所以该应用程序只能在该操作系统上边运行而已，不可以在其他操作系统上运行。</p>
+<p><strong>内核功能</strong>
+- 系统调用接口
+- 进程管理
+- 内存管理
+- 文件系统管理
+- 设备驱动</p>
+<p>一些零碎的点
+- 操作系统必须能够驱动硬件，如此应用程序才能够使用该硬件功能
+- 一般来说，操作系统会提供API，让开发商编写他们的驱动程序。
+- 要使用新硬件功能，必须要安装厂商提供的驱动程序才行。
+- 驱动程序是由厂商提供，与操作系统无关</p>
+</div>
+<div class="section" id="id4">
+<h2>应用程序<a class="headerlink" href="#id4" title="永久链接至标题"></a></h2>
+<p>应用程序是参考操作系统提供的API所开发出来的软件，这些软件可以让用户操作，以实现某些功能。</p>
+</div>
+<div class="section" id="linux">
+<h2>linux启动流程分析<a class="headerlink" href="#linux" title="永久链接至标题"></a></h2>
+<ul class="simple">
+<li><p>加载BIOS的硬件信息与进行自我检测（自检），并根据设置取得第一个可启动的设备。</p></li>
+<li><p>读取并执行第一个启动设备内MBR的启动引导程序（亦或是grub2、spfdisk等程序）。</p></li>
+<li><p>根据启动引导程序的设置加载kernel，kernel会开始检测硬件与加载驱动程序。</p></li>
+<li><dl class="simple">
+<dt>在硬件驱动成功后，kernel会主动调用systemd程序，并以default.target流程启动</dt><dd><ul>
+<li><p>systemd执行sysinit.target初始化系统及basic.target准备操作系统</p></li>
+<li><p>systemd启动multi-user.target下的本机与服务器服务。</p></li>
+<li><p>systemd执行multi-user.target下的/etc/rc.d/rc.local文件</p></li>
+<li><p>systemd执行multi-user.target下的getty.target及登录服务</p></li>
+<li><p>systemd执行graphical需要的服务</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<p>解释</p>
+<ul class="simple">
+<li><p>BIOS：不论传统BIOS还是UEFI BIOS都会被简称为BIOS</p></li>
+<li><p>MBR： 虽然分区表有传统MBR以及新式GPT，不过GPT也有保留一块兼容MBR的区块，因此，下边的说明在安装boot loader 的部分，还简称MBR。总之，MBR就代表该磁盘的最前面可安装bootloader的那个区块。</p></li>
+</ul>
+<p>—</p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../index.html" class="btn btn-neutral float-left" title="Welcome to linux学习笔记’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> 上一页</a>
+        <a href="app_2.html" class="btn btn-neutral float-right" title="软件安装" accesskey="n" rel="next">下一页 <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; 版权所有 xdt,海南大学.</p>
+  </div>
+
+  利用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 构建，使用了 
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">主题</a>
+    由 <a href="https://readthedocs.org">Read the Docs</a>开发.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

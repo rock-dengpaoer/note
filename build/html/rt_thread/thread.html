@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="zh-CN" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>线程 &mdash; linux学习笔记  文档</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/translations.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="时钟管理" href="timer.html" />
+    <link rel="prev" title="软件安装" href="../Linux/app_2.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> linux学习笔记
+            <img src="../_static/logo.jpg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="在文档中搜索" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Linux:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Linux/app_1.html">软件运行分析</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Linux/app_2.html">软件安装</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">rt_thread内核:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">线程</a></li>
+<li class="toctree-l1"><a class="reference internal" href="timer.html">时钟管理</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Synchronize.html">线程间同步</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">DDS:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Fast_DDS/Fast_DDS_1.html">Fast-DDS</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">网站搭建:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../web/web_1.html">内网网站搭建</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">杂项:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Other/Sphinx_Tutorials.html">sphinx安装与使用</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Other/Sphinx_Tutorials.html#id14">sphinx简明教程</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Other/Sphinx_Tutorials.html#id15">sphinx使用时需要注意的问题</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">周报</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Data/Data_weekly.html">2021-10</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">linux学习笔记</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>线程</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/rt_thread/thread.rst.txt" rel="nofollow"> 查看页面源码</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="id1">
+<h1>线程<a class="headerlink" href="#id1" title="永久链接至标题"></a></h1>
+<p>线程是实现任务的载体，是RT-Thread中最基本的调度单元，他描述了一个任务执行的运行环境。</p>
+<p>系统中共存在两类线程，分别是 <strong>系统线程</strong> 和 <strong>用户线程</strong> 。</p>
+<p>RT-Thread的线程调度器是抢占式的，主要工作就是从就绪线程列表中查找最高优先级线程，保证优先级最高的线程能够被运行。</p>
+<div class="literal-block-wrapper docutils container" id="id2">
+<div class="code-block-caption"><span class="caption-text">线程控制块的定义</span><a class="headerlink" href="#id2" title="永久链接至代码"></a></div>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="lineno"> 1 </span> <span class="k">struct</span> <span class="n">rt_thread</span>
+<span class="lineno"> 2 </span> <span class="p">{</span>
+<span class="lineno"> 3 </span>     <span class="cm">/* rt object */</span>
+<span class="lineno"> 4 </span>     <span class="kt">char</span>        <span class="n">name</span><span class="p">[</span><span class="n">RT_NAME_MAX</span><span class="p">];</span>                      <span class="cm">/** 线程名字 */</span>
+<span class="lineno"> 5 </span>     <span class="n">rt_uint8_t</span>  <span class="n">type</span><span class="p">;</span>                                   <span class="cm">/**&lt; 对象类型 */</span>
+<span class="lineno"> 6 </span>     <span class="n">rt_uint8_t</span>  <span class="n">flags</span><span class="p">;</span>                                  <span class="cm">/**&lt; 标志位 */</span>
+<span class="lineno"> 7 </span>
+<span class="lineno"> 8 </span> <span class="cp">#ifdef RT_USING_MODULE</span>
+<span class="lineno"> 9 </span>     <span class="kt">void</span>       <span class="o">*</span><span class="n">module_id</span><span class="p">;</span>                              <span class="cm">/**&lt; id of application module */</span>
+<span class="lineno">10 </span> <span class="cp">#endif</span>
+<span class="lineno">11 </span>
+<span class="lineno">12 </span>     <span class="n">rt_list_t</span>   <span class="n">list</span><span class="p">;</span>                                   <span class="cm">/**&lt; 对象列表 */</span>
+<span class="lineno">13 </span>     <span class="n">rt_list_t</span>   <span class="n">tlist</span><span class="p">;</span>                                  <span class="cm">/**&lt; 线程列表 */</span>
+<span class="lineno">14 </span>
+<span class="lineno">15 </span>     <span class="cm">/* 栈指针和入口指针 */</span>
+<span class="lineno">16 </span>     <span class="kt">void</span>       <span class="o">*</span><span class="n">sp</span><span class="p">;</span>                                     <span class="cm">/**&lt; 栈指针 */</span>
+<span class="lineno">17 </span>     <span class="kt">void</span>       <span class="o">*</span><span class="n">entry</span><span class="p">;</span>                                  <span class="cm">/**&lt; 入口函数指针 */</span>
+<span class="lineno">18 </span>     <span class="kt">void</span>       <span class="o">*</span><span class="n">parameter</span><span class="p">;</span>                              <span class="cm">/**&lt; 参数 */</span>
+<span class="lineno">19 </span>     <span class="kt">void</span>       <span class="o">*</span><span class="n">stack_addr</span><span class="p">;</span>                             <span class="cm">/**&lt; 栈地址指针 */</span>
+<span class="lineno">20 </span>     <span class="n">rt_uint32_t</span> <span class="n">stack_size</span><span class="p">;</span>                             <span class="cm">/**&lt; 栈大小 */</span>
+<span class="lineno">21 </span>
+<span class="lineno">22 </span>     <span class="cm">/* 错误代码 */</span>
+<span class="lineno">23 </span>     <span class="n">rt_err_t</span>    <span class="n">error</span><span class="p">;</span>                                  <span class="cm">/**&lt; 线程错误代码 */</span>
+<span class="lineno">24 </span>
+<span class="lineno">25 </span>     <span class="n">rt_uint8_t</span>  <span class="n">stat</span><span class="p">;</span>                                   <span class="cm">/**&lt; 线程状态 */</span>
+<span class="lineno">26 </span>
+<span class="lineno">27 </span> <span class="cp">#ifdef RT_USING_SMP</span>
+<span class="lineno">28 </span>     <span class="n">rt_uint8_t</span>  <span class="n">bind_cpu</span><span class="p">;</span>                               <span class="cm">/**&lt; thread is bind to cpu */</span>
+<span class="lineno">29 </span>     <span class="n">rt_uint8_t</span>  <span class="n">oncpu</span><span class="p">;</span>                                  <span class="cm">/**&lt; process on cpu*/</span>
+<span class="lineno">30 </span>     <span class="n">rt_uint16_t</span> <span class="n">scheduler_lock_nest</span><span class="p">;</span>                    <span class="cm">/**&lt; scheduler lock count */</span>
+<span class="lineno">31 </span>     <span class="n">rt_uint16_t</span> <span class="n">cpus_lock_nest</span><span class="p">;</span>                         <span class="cm">/**&lt; cpus lock count */</span>
+<span class="lineno">32 </span>     <span class="n">rt_uint16_t</span> <span class="n">critical_lock_nest</span><span class="p">;</span>                     <span class="cm">/**&lt; critical lock count */</span>
+<span class="lineno">33 </span> <span class="cp">#endif </span><span class="cm">/*RT_USING_SMP*/</span><span class="cp"></span>
+<span class="lineno">34 </span>
+<span class="lineno">35 </span>     <span class="cm">/* 优先级 */</span>
+<span class="lineno">36 </span>     <span class="n">rt_uint8_t</span>  <span class="n">current_priority</span><span class="p">;</span>                       <span class="cm">/**&lt; 当前优先级 */</span>
+<span class="lineno">37 </span>     <span class="n">rt_uint8_t</span>  <span class="n">init_priority</span><span class="p">;</span>                          <span class="cm">/**&lt; 初始优先级 */</span>
+<span class="lineno">38 </span> <span class="cp">#if RT_THREAD_PRIORITY_MAX &gt; 32</span>
+<span class="lineno">39 </span>     <span class="n">rt_uint8_t</span>  <span class="n">number</span><span class="p">;</span>
+<span class="lineno">40 </span>     <span class="n">rt_uint8_t</span>  <span class="n">high_mask</span><span class="p">;</span>
+<span class="lineno">41 </span> <span class="cp">#endif</span>
+<span class="lineno">42 </span>     <span class="n">rt_uint32_t</span> <span class="n">number_mask</span><span class="p">;</span>
+<span class="lineno">43 </span>
+<span class="lineno">44 </span> <span class="cp">#if defined(RT_USING_EVENT)</span>
+<span class="lineno">45 </span>     <span class="cm">/* thread event */</span>
+<span class="lineno">46 </span>     <span class="n">rt_uint32_t</span> <span class="n">event_set</span><span class="p">;</span>
+<span class="lineno">47 </span>     <span class="n">rt_uint8_t</span>  <span class="n">event_info</span><span class="p">;</span>
+<span class="lineno">48 </span> <span class="cp">#endif</span>
+<span class="lineno">49 </span>
+<span class="lineno">50 </span> <span class="cp">#if defined(RT_USING_SIGNALS)</span>
+<span class="lineno">51 </span>     <span class="n">rt_sigset_t</span>     <span class="n">sig_pending</span><span class="p">;</span>                        <span class="cm">/**&lt; the pending signals */</span>
+<span class="lineno">52 </span>     <span class="n">rt_sigset_t</span>     <span class="n">sig_mask</span><span class="p">;</span>                           <span class="cm">/**&lt; the mask bits of signal */</span>
+<span class="lineno">53 </span>
+<span class="lineno">54 </span> <span class="cp">#ifndef RT_USING_SMP</span>
+<span class="lineno">55 </span>     <span class="kt">void</span>            <span class="o">*</span><span class="n">sig_ret</span><span class="p">;</span>                           <span class="cm">/**&lt; the return stack pointer from signal */</span>
+<span class="lineno">56 </span> <span class="cp">#endif</span>
+<span class="lineno">57 </span>     <span class="n">rt_sighandler_t</span> <span class="o">*</span><span class="n">sig_vectors</span><span class="p">;</span>                       <span class="cm">/**&lt; vectors of signal handler */</span>
+<span class="lineno">58 </span>     <span class="kt">void</span>            <span class="o">*</span><span class="n">si_list</span><span class="p">;</span>                           <span class="cm">/**&lt; the signal infor list */</span>
+<span class="lineno">59 </span> <span class="cp">#endif</span>
+<span class="lineno">60 </span>
+<span class="lineno">61 </span>     <span class="n">rt_ubase_t</span>  <span class="n">init_tick</span><span class="p">;</span>                              <span class="cm">/**&lt; 线程初始化计数值 */</span>
+<span class="lineno">62 </span>     <span class="n">rt_ubase_t</span>  <span class="n">remaining_tick</span><span class="p">;</span>                         <span class="cm">/**&lt; 线程剩余计数值 */</span>
+<span class="lineno">63 </span>
+<span class="lineno">64 </span>     <span class="k">struct</span> <span class="n">rt_timer</span> <span class="n">thread_timer</span><span class="p">;</span>                       <span class="cm">/**&lt; 内置线程计数器 */</span>
+<span class="lineno">65 </span>
+<span class="lineno">66 </span>     <span class="kt">void</span> <span class="p">(</span><span class="o">*</span><span class="n">cleanup</span><span class="p">)(</span><span class="k">struct</span> <span class="n">rt_thread</span> <span class="o">*</span><span class="n">tid</span><span class="p">);</span>             <span class="cm">/**&lt; 用户退出清除函数 */</span>
+<span class="lineno">67 </span>
+<span class="lineno">68 </span>     <span class="cm">/* light weight process if present */</span>
+<span class="lineno">69 </span> <span class="cp">#ifdef RT_USING_LWP</span>
+<span class="lineno">70 </span>     <span class="kt">void</span>        <span class="o">*</span><span class="n">lwp</span><span class="p">;</span>
+<span class="lineno">71 </span> <span class="cp">#endif</span>
+<span class="lineno">72 </span>
+<span class="lineno">73 </span>     <span class="n">rt_ubase_t</span> <span class="n">user_data</span><span class="p">;</span>                             <span class="cm">/**&lt; 用户数据 */</span>
+<span class="lineno">74 </span> <span class="p">};</span>
+</pre></div>
+</div>
+</div>
+<p><strong>线程栈</strong>：RT-Thread线程具有独立的栈，当进行线程切换时，会将当前线程的上下文保存在栈中，当线程要恢复运行是，再从栈中读取上下文信息进行恢复。</p>
+<p>线程栈还用来存放函数中的局部变量。</p>
+<p><strong>线程状态</strong>：</p>
+<ul>
+<li><p>初始状态:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>线程不参与调度。
+</pre></div>
+</div>
+</li>
+<li><p>就绪状态:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>线程按照优先级排队，等待被执行；一旦当前线程运行完毕让出处理器，操作系统就会马上寻找最高优先级的就绪状态线程运行。
+</pre></div>
+</div>
+</li>
+<li><p>运行状态:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>线程当前正在运行，在**单核系统**中，只有rt_thread_self()函数返回的线程处于运行状态；
+在多核系统中，可能就不止一个线程处于运行状态。
+</pre></div>
+</div>
+</li>
+<li><p>挂起状态:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>也称堵塞态。在挂起状态下，线程不参与调度。可能是因为资源不可用而挂起等待，或线程主动延时一段时间而挂起。
+</pre></div>
+</div>
+</li>
+<li><p>关闭状态:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>当线程运行结束时将处于关闭状态。关闭状态的线程不参与线程的调度。
+</pre></div>
+</div>
+</li>
+</ul>
+<div class="literal-block-wrapper docutils container" id="id3">
+<div class="code-block-caption"><span class="caption-text">线程状态</span><a class="headerlink" href="#id3" title="永久链接至代码"></a></div>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="lineno">1 </span> <span class="cp">#define RT_THREAD_INIT                  0x00                </span><span class="cm">/**&lt; 初始状态 */</span><span class="cp"></span>
+<span class="lineno">2 </span> <span class="cp">#define RT_THREAD_READY                 0x01                </span><span class="cm">/**&lt; 就绪状态 */</span><span class="cp"></span>
+<span class="lineno">3 </span> <span class="cp">#define RT_THREAD_SUSPEND               0x02                </span><span class="cm">/**&lt; 挂起状态 */</span><span class="cp"></span>
+<span class="lineno">4 </span> <span class="cp">#define RT_THREAD_RUNNING               0x03                </span><span class="cm">/**&lt; 运行状态 */</span><span class="cp"></span>
+<span class="lineno">5 </span> <span class="cp">#define RT_THREAD_BLOCK                 RT_THREAD_SUSPEND   </span><span class="cm">/**&lt; 新增的状态，将挂起状态再细分，分为锁死状态 */</span><span class="cp"></span>
+<span class="lineno">6 </span> <span class="cp">#define RT_THREAD_CLOSE                 0x04                </span><span class="cm">/**&lt; 关闭状态 */</span><span class="cp"></span>
+</pre></div>
+</div>
+</div>
+<p><strong>线程优先级</strong>：RT-Thread最大支持256个线程优先级（0~255），数值越小的优先级越高，0为最高优先级。</p>
+<p>在一些资源比较紧张的系统中，可以根据实际情况选择只支持8个或32个优先级的系统配置。</p>
+<p>对于ARM Cortex-M系列，普遍采用32个优先级。最低优先级默认分配给空闲线程使用，用户一般不使用。</p>
+<div class="literal-block-wrapper docutils container" id="id4">
+<div class="code-block-caption"><span class="caption-text">创建线程示例</span><a class="headerlink" href="#id4" title="永久链接至代码"></a></div>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="lineno"> 1 </span> <span class="k">static</span> <span class="n">rt_thread_t</span> <span class="n">tid1</span> <span class="o">=</span> <span class="n">RT_NULL</span><span class="p">;</span>
+<span class="lineno"> 2 </span>
+<span class="lineno"> 3 </span> <span class="cp">#define THREAD_PRIORITY     25 </span><span class="c1">//线程优先级</span>
+<span class="lineno"> 4 </span> <span class="cp">#define THREAD_STACK_SIZE   512 </span><span class="c1">//线程栈大小</span>
+<span class="lineno"> 5 </span> <span class="cp">#define THREAD_TIMESLICE    5   </span><span class="c1">//线程时间片大小</span>
+<span class="lineno"> 6 </span>
+<span class="lineno"> 7 </span> <span class="c1">//线程1入口函数</span>
+<span class="lineno"> 8 </span> <span class="kt">void</span> <span class="nf">thread1_entry</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">paramenter</span><span class="p">)</span>
+<span class="lineno"> 9 </span> <span class="p">{</span>
+<span class="lineno">10 </span>     <span class="n">rt_uint32_t</span> <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="lineno">11 </span>
+<span class="lineno">12 </span>     <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="lineno">13 </span>     <span class="p">{</span>
+<span class="lineno">14 </span>         <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;thread1 count: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">count</span><span class="o">++</span><span class="p">);</span> <span class="c1">//打印字符</span>
+<span class="lineno">15 </span>         <span class="n">rt_thread_delay</span><span class="p">(</span><span class="mi">500</span><span class="p">);</span> <span class="c1">//延时0.5秒</span>
+<span class="lineno">16 </span>     <span class="p">}</span>
+<span class="lineno">17 </span> <span class="p">}</span>
+<span class="lineno">18 </span>
+<span class="lineno">19 </span> <span class="k">static</span> <span class="kt">char</span> <span class="n">thread2_stack</span><span class="p">[</span><span class="mi">1024</span><span class="p">];</span>
+<span class="lineno">20 </span> <span class="k">static</span> <span class="k">struct</span> <span class="n">rt_thread</span> <span class="n">thread2</span><span class="p">;</span>
+<span class="lineno">21 </span>
+<span class="lineno">22 </span> <span class="kt">void</span> <span class="nf">thread2_entry</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">paramenter</span><span class="p">)</span>
+<span class="lineno">23 </span> <span class="p">{</span>
+<span class="lineno">24 </span>     <span class="n">rt_uint32_t</span> <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="lineno">25 </span>
+<span class="lineno">26 </span>     <span class="k">for</span><span class="p">(</span><span class="n">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span><span class="n">count</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">;</span> <span class="n">count</span><span class="o">++</span><span class="p">)</span>
+<span class="lineno">27 </span>     <span class="p">{</span>
+<span class="lineno">28 </span>         <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;thread2 count:%d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">count</span><span class="p">);</span>
+<span class="lineno">29 </span>     <span class="p">}</span>
+<span class="lineno">30 </span> <span class="p">}</span>
+<span class="lineno">31 </span>
+<span class="lineno">32 </span> <span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="lineno">33 </span> <span class="p">{</span>
+<span class="lineno">34 </span> <span class="c1">//    void thread1_entry();</span>
+<span class="lineno">35 </span>
+<span class="lineno">36 </span>     <span class="c1">//动态创建线程1</span>
+<span class="lineno">37 </span>     <span class="n">tid1</span> <span class="o">=</span> <span class="n">rt_thread_create</span><span class="p">(</span><span class="s">&quot;thread1&quot;</span><span class="p">,</span>
+<span class="lineno">38 </span>                             <span class="n">thread1_entry</span><span class="p">,</span>
+<span class="lineno">39 </span>                             <span class="n">RT_NULL</span><span class="p">,</span>
+<span class="lineno">40 </span>                             <span class="n">THREAD_STACK_SIZE</span><span class="p">,</span>
+<span class="lineno">41 </span>                             <span class="n">THREAD_PRIORITY</span><span class="p">,</span>
+<span class="lineno">42 </span>                             <span class="n">THREAD_TIMESLICE</span><span class="p">);</span>
+<span class="lineno">43 </span>
+<span class="lineno">44 </span>     <span class="c1">//静态初始化线程2</span>
+<span class="lineno">45 </span>     <span class="n">rt_thread_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">thread2</span><span class="p">,</span>
+<span class="lineno">46 </span>                 <span class="s">&quot;thread2&quot;</span><span class="p">,</span>
+<span class="lineno">47 </span>                 <span class="n">thread2_entry</span><span class="p">,</span>
+<span class="lineno">48 </span>                 <span class="n">RT_NULL</span><span class="p">,</span>
+<span class="lineno">49 </span>                 <span class="o">&amp;</span><span class="n">thread2_stack</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+<span class="lineno">50 </span>                 <span class="k">sizeof</span><span class="p">(</span><span class="n">thread2_stack</span><span class="p">),</span>
+<span class="lineno">51 </span>                 <span class="n">THREAD_PRIORITY</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+<span class="lineno">52 </span>                 <span class="n">THREAD_TIMESLICE</span><span class="p">);</span>
+<span class="lineno">53 </span>
+<span class="lineno">54 </span>     <span class="k">if</span><span class="p">(</span><span class="n">tid1</span> <span class="o">!=</span> <span class="n">RT_NULL</span><span class="p">)</span>
+<span class="lineno">55 </span>     <span class="p">{</span>
+<span class="lineno">56 </span>         <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;thread1 has been init.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="lineno">57 </span>         <span class="n">rt_thread_delay</span><span class="p">(</span><span class="mi">1000</span><span class="p">);</span>
+<span class="lineno">58 </span>         <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;thread1 start!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="lineno">59 </span>         <span class="n">rt_thread_startup</span><span class="p">(</span><span class="n">tid1</span><span class="p">);</span>    <span class="c1">//启动线程1</span>
+<span class="lineno">60 </span>     <span class="p">}</span>
+<span class="lineno">61 </span>     <span class="k">else</span> <span class="p">{</span>
+<span class="lineno">62 </span>         <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;thread1 init error!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="lineno">63 </span>     <span class="p">}</span>
+<span class="lineno">64 </span>
+<span class="lineno">65 </span>     <span class="n">rt_thread_startup</span><span class="p">(</span><span class="o">&amp;</span><span class="n">thread2</span><span class="p">);</span><span class="c1">//启动线程2</span>
+<span class="lineno">66 </span>
+<span class="lineno">67 </span>
+<span class="lineno">68 </span> <span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="literal-block-wrapper docutils container" id="id5">
+<div class="code-block-caption"><span class="caption-text">线程时间片轮转调度示例</span><a class="headerlink" href="#id5" title="永久链接至代码"></a></div>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="lineno"> 1 </span> <span class="cp">#define THREAD_PRIORITY     20</span>
+<span class="lineno"> 2 </span> <span class="cp">#define THREAD_STACK_SIZE   1024</span>
+<span class="lineno"> 3 </span> <span class="cp">#define THREAD_TIMESLICE    10</span>
+<span class="lineno"> 4 </span>
+<span class="lineno"> 5 </span>
+<span class="lineno"> 6 </span> <span class="k">static</span> <span class="kt">void</span> <span class="nf">thread_entry</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">parameter</span><span class="p">)</span>
+<span class="lineno"> 7 </span> <span class="p">{</span>
+<span class="lineno"> 8 </span>     <span class="n">rt_uint32_t</span> <span class="n">value</span><span class="p">;</span>
+<span class="lineno"> 9 </span>     <span class="n">rt_uint32_t</span> <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="lineno">10 </span>
+<span class="lineno">11 </span>     <span class="n">value</span> <span class="o">=</span> <span class="p">(</span><span class="n">rt_uint32_t</span><span class="p">)</span><span class="n">parameter</span><span class="p">;</span>
+<span class="lineno">12 </span>     <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="lineno">13 </span>     <span class="p">{</span>
+<span class="lineno">14 </span>         <span class="k">if</span><span class="p">(</span><span class="mi">0</span> <span class="o">==</span> <span class="p">(</span><span class="n">count</span> <span class="o">%</span> <span class="mi">5</span><span class="p">))</span>
+<span class="lineno">15 </span>         <span class="p">{</span>
+<span class="lineno">16 </span>             <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;thread %d is running, thread %d count = %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">count</span><span class="p">);</span>
+<span class="lineno">17 </span>
+<span class="lineno">18 </span>             <span class="k">if</span><span class="p">(</span><span class="n">count</span> <span class="o">&gt;</span> <span class="mi">200</span><span class="p">)</span>
+<span class="lineno">19 </span>                 <span class="k">return</span><span class="p">;</span>
+<span class="lineno">20 </span>         <span class="p">}</span>
+<span class="lineno">21 </span>
+<span class="lineno">22 </span>         <span class="n">count</span><span class="o">++</span><span class="p">;</span>
+<span class="lineno">23 </span>     <span class="p">}</span>
+<span class="lineno">24 </span> <span class="p">}</span>
+<span class="lineno">25 </span>
+<span class="lineno">26 </span>
+<span class="lineno">27 </span> <span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="lineno">28 </span> <span class="p">{</span>
+<span class="lineno">29 </span>     <span class="n">rt_thread_t</span> <span class="n">tid</span> <span class="o">=</span> <span class="n">RT_NULL</span><span class="p">;</span>
+<span class="lineno">30 </span>
+<span class="lineno">31 </span>     <span class="n">tid</span> <span class="o">=</span> <span class="n">rt_thread_create</span><span class="p">(</span><span class="s">&quot;thread1&quot;</span><span class="p">,</span>
+<span class="lineno">32 </span>                             <span class="n">thread_entry</span><span class="p">,</span>
+<span class="lineno">33 </span>                             <span class="p">(</span><span class="kt">void</span><span class="o">*</span><span class="p">)</span><span class="mi">1</span><span class="p">,</span>
+<span class="lineno">34 </span>                             <span class="n">THREAD_STACK_SIZE</span><span class="p">,</span>
+<span class="lineno">35 </span>                             <span class="n">THREAD_PRIORITY</span><span class="p">,</span>
+<span class="lineno">36 </span>                             <span class="n">THREAD_TIMESLICE</span><span class="p">);</span>
+<span class="lineno">37 </span>
+<span class="lineno">38 </span>     <span class="k">if</span><span class="p">(</span><span class="n">tid</span> <span class="o">!=</span> <span class="n">RT_NULL</span><span class="p">)</span>
+<span class="lineno">39 </span>     <span class="p">{</span>
+<span class="lineno">40 </span>         <span class="n">rt_thread_startup</span><span class="p">(</span><span class="n">tid</span><span class="p">);</span>
+<span class="lineno">41 </span>     <span class="p">}</span>
+<span class="lineno">42 </span>
+<span class="lineno">43 </span> <span class="n">tid</span> <span class="o">=</span> <span class="n">rt_thread_create</span><span class="p">(</span><span class="s">&quot;thread2&quot;</span><span class="p">,</span>
+<span class="lineno">44 </span>                         <span class="n">thread_entry</span><span class="p">,</span>
+<span class="lineno">45 </span>                         <span class="p">(</span><span class="kt">void</span><span class="o">*</span><span class="p">)</span><span class="mi">2</span><span class="p">,</span>
+<span class="lineno">46 </span>                         <span class="n">THREAD_STACK_SIZE</span><span class="p">,</span>
+<span class="lineno">47 </span>                         <span class="n">THREAD_PRIORITY</span><span class="p">,</span>
+<span class="lineno">48 </span>                         <span class="n">THREAD_TIMESLICE</span><span class="o">-</span><span class="mi">5</span><span class="p">);</span>
+<span class="lineno">49 </span> <span class="k">if</span><span class="p">(</span><span class="n">tid</span> <span class="o">!=</span> <span class="n">RT_NULL</span><span class="p">)</span>
+<span class="lineno">50 </span>     <span class="p">{</span>
+<span class="lineno">51 </span>         <span class="n">rt_thread_startup</span><span class="p">(</span><span class="n">tid</span><span class="p">);</span>
+<span class="lineno">52 </span>     <span class="p">}</span>
+<span class="lineno">53 </span>
+<span class="lineno">54 </span> <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="lineno">55 </span> <span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="literal-block-wrapper docutils container" id="id6">
+<div class="code-block-caption"><span class="caption-text">线程调度钩子示例
+#define THREAD_STACK_SIZE   1024
+#define THREAD_PRIORITY     20
+#define THREAD_TIMESLICE    10</span><a class="headerlink" href="#id6" title="永久链接至代码"></a></div>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="lineno"> 1 </span> <span class="k">volatile</span> <span class="n">rt_uint32_t</span> <span class="n">count</span><span class="p">[</span><span class="mi">2</span><span class="p">];</span> <span class="c1">//锟斤拷锟矫匡拷锟斤拷叱痰募锟斤拷锟斤拷锟�</span>
+<span class="lineno"> 2 </span>
+<span class="lineno"> 3 </span> <span class="c1">//线程1和线程2共同的入口函数，只是传递的参数不一样</span>
+<span class="lineno"> 4 </span> <span class="k">static</span> <span class="kt">void</span> <span class="nf">thread_entry</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">parameter</span><span class="p">)</span>
+<span class="lineno"> 5 </span> <span class="p">{</span>
+<span class="lineno"> 6 </span>     <span class="n">rt_uint32_t</span> <span class="n">value</span><span class="p">;</span>
+<span class="lineno"> 7 </span>
+<span class="lineno"> 8 </span>     <span class="n">value</span> <span class="o">=</span> <span class="p">(</span><span class="n">rt_uint32_t</span><span class="p">)</span><span class="n">parameter</span><span class="p">;</span>
+<span class="lineno"> 9 </span>
+<span class="lineno">10 </span>     <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="lineno">11 </span>     <span class="p">{</span>
+<span class="lineno">12 </span>         <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;thread %d is runing </span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">value</span><span class="p">);</span>
+<span class="lineno">13 </span>         <span class="n">rt_thread_delay</span><span class="p">(</span><span class="mi">1000</span><span class="p">);</span>
+<span class="lineno">14 </span>     <span class="p">}</span>
+<span class="lineno">15 </span> <span class="p">}</span>
+<span class="lineno">16 </span>
+<span class="lineno">17 </span> <span class="k">static</span> <span class="n">rt_thread_t</span> <span class="n">tid1</span> <span class="o">=</span> <span class="n">RT_NULL</span><span class="p">;</span>
+<span class="lineno">18 </span> <span class="k">static</span> <span class="n">rt_thread_t</span> <span class="n">tid2</span> <span class="o">=</span> <span class="n">RT_NULL</span><span class="p">;</span>
+<span class="lineno">19 </span>
+<span class="lineno">20 </span>
+<span class="lineno">21 </span> <span class="c1">//调度器钩子函数</span>
+<span class="lineno">22 </span> <span class="c1">//from -----------表示系统所要切换出的线程控制块指针</span>
+<span class="lineno">23 </span> <span class="c1">//to -------------表示系统所要切换到的线程控制块指针</span>
+<span class="lineno">24 </span> <span class="k">static</span> <span class="kt">void</span> <span class="nf">hook_of_schedular</span><span class="p">(</span><span class="k">struct</span> <span class="n">rt_thread</span><span class="o">*</span> <span class="n">from</span><span class="p">,</span> <span class="k">struct</span> <span class="n">rt_thread</span><span class="o">*</span> <span class="n">to</span><span class="p">)</span>
+<span class="lineno">25 </span> <span class="p">{</span>
+<span class="lineno">26 </span>     <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;from: %s --&gt; to:%s </span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">from</span><span class="o">-&gt;</span><span class="n">name</span><span class="p">,</span> <span class="n">to</span><span class="o">-&gt;</span><span class="n">name</span><span class="p">);</span>
+<span class="lineno">27 </span> <span class="p">}</span>
+<span class="lineno">28 </span>
+<span class="lineno">29 </span>
+<span class="lineno">30 </span> <span class="kt">int</span> <span class="nf">sceduler_hook</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="lineno">31 </span> <span class="p">{</span>
+<span class="lineno">32 </span>     <span class="c1">//设置调度器钩子函数为hook_of_schedular</span>
+<span class="lineno">33 </span>     <span class="n">rt_scheduler_sethook</span><span class="p">(</span><span class="n">hook_of_schedular</span><span class="p">);</span>
+<span class="lineno">34 </span>
+<span class="lineno">35 </span>     <span class="c1">//创建线程1</span>
+<span class="lineno">36 </span>     <span class="n">tid1</span> <span class="o">=</span> <span class="n">rt_thread_create</span><span class="p">(</span><span class="s">&quot;thread1&quot;</span><span class="p">,</span>
+<span class="lineno">37 </span>                             <span class="n">thread_entry</span><span class="p">,</span>
+<span class="lineno">38 </span>                             <span class="p">(</span><span class="kt">void</span><span class="o">*</span><span class="p">)</span><span class="mi">1</span><span class="p">,</span>
+<span class="lineno">39 </span>                             <span class="n">THREAD_STACK_SIZE</span><span class="p">,</span>
+<span class="lineno">40 </span>                             <span class="n">THREAD_PRIORITY</span><span class="p">,</span>
+<span class="lineno">41 </span>                             <span class="n">THREAD_TIMESLICE</span><span class="p">);</span>
+<span class="lineno">42 </span>
+<span class="lineno">43 </span>     <span class="k">if</span><span class="p">(</span><span class="n">tid1</span> <span class="o">!=</span> <span class="n">RT_NULL</span><span class="p">)</span>
+<span class="lineno">44 </span>         <span class="n">rt_thread_startup</span><span class="p">(</span><span class="n">tid1</span><span class="p">);</span>
+<span class="lineno">45 </span>
+<span class="lineno">46 </span>     <span class="c1">//创建线程2</span>
+<span class="lineno">47 </span>     <span class="n">tid2</span> <span class="o">=</span> <span class="n">rt_thread_create</span><span class="p">(</span><span class="s">&quot;thread2&quot;</span><span class="p">,</span>
+<span class="lineno">48 </span>                             <span class="n">thread_entry</span><span class="p">,</span>
+<span class="lineno">49 </span>                             <span class="p">(</span><span class="kt">void</span><span class="o">*</span><span class="p">)</span><span class="mi">2</span><span class="p">,</span>
+<span class="lineno">50 </span>                             <span class="n">THREAD_STACK_SIZE</span><span class="p">,</span>
+<span class="lineno">51 </span>                             <span class="n">THREAD_PRIORITY</span><span class="p">,</span>
+<span class="lineno">52 </span>                             <span class="n">THREAD_TIMESLICE</span><span class="o">-</span><span class="mi">5</span><span class="p">);</span>
+<span class="lineno">53 </span>     <span class="k">if</span><span class="p">(</span><span class="n">tid2</span> <span class="o">!=</span> <span class="n">RT_NULL</span><span class="p">)</span>
+<span class="lineno">54 </span>             <span class="n">rt_thread_startup</span><span class="p">(</span><span class="n">tid2</span><span class="p">);</span>
+<span class="lineno">55 </span>
+<span class="lineno">56 </span>     <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="lineno">57 </span> <span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<p><strong>小结</strong>：</p>
+<ol class="arabic simple">
+<li><p>普通线程不能陷入死循环操作，必须要有让出CPU使用权的动作。</p></li>
+<li><p>线程调度基于优先级抢占的方式进行，优先级相同的线程通过时间片轮询执行</p></li>
+<li><p>动态线程的创建与删除调用接口是rt_thread_create和rt_thread_delete；静态线程的初始化与脱离调用接口是rt_thread_init和rt_thread_detach。<strong>注意</strong>，由于能执行完毕的线程会被系统自动删除，不推荐用户使用删除/脱离线程接口。</p></li>
+</ol>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../Linux/app_2.html" class="btn btn-neutral float-left" title="软件安装" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> 上一页</a>
+        <a href="timer.html" class="btn btn-neutral float-right" title="时钟管理" accesskey="n" rel="next">下一页 <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; 版权所有 xdt,海南大学.</p>
+  </div>
+
+  利用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 构建，使用了 
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">主题</a>
+    由 <a href="https://readthedocs.org">Read the Docs</a>开发.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

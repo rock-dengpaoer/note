@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="zh-CN" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fast-DDS &mdash; linux学习笔记  文档</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/translations.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="内网网站搭建" href="../web/web_1.html" />
+    <link rel="prev" title="线程间同步" href="../rt_thread/Synchronize.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> linux学习笔记
+            <img src="../_static/logo.jpg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="在文档中搜索" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Linux:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Linux/app_1.html">软件运行分析</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Linux/app_2.html">软件安装</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">rt_thread内核:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../rt_thread/thread.html">线程</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rt_thread/timer.html">时钟管理</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rt_thread/Synchronize.html">线程间同步</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">DDS:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Fast-DDS</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id1">架构图</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#dds">DDS层</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#rtps">RTPS层</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">网站搭建:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../web/web_1.html">内网网站搭建</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">杂项:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Other/Sphinx_Tutorials.html">sphinx安装与使用</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Other/Sphinx_Tutorials.html#id14">sphinx简明教程</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Other/Sphinx_Tutorials.html#id15">sphinx使用时需要注意的问题</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">周报</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Data/Data_weekly.html">2021-10</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">linux学习笔记</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Fast-DDS</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/Fast_DDS/Fast_DDS_1.rst.txt" rel="nofollow"> 查看页面源码</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="fast-dds">
+<h1>Fast-DDS<a class="headerlink" href="#fast-dds" title="永久链接至标题"></a></h1>
+<div class="section" id="id1">
+<h2>架构图<a class="headerlink" href="#id1" title="永久链接至标题"></a></h2>
+<img alt="../_images/Fast-DDS-1.png" src="../_images/Fast-DDS-1.png" />
+<ul class="simple">
+<li><p>应用层：使用Fast-DDS API在分布式系统中实现通信的用户应用程序。</p></li>
+<li><p>快速DDS层：DDS通信中间件的稳健实现。它允许部署一个或多个DDS域，其中同一域内的参与者通过在域主题下发布/订阅来交换消息。</p></li>
+<li><p>RTPS层：实现实时发布-订阅（RTPS）协议以实现与DDS应用程序的互操作性。该层充当传输层的抽象层。</p></li>
+<li><p>传输层。快速DDS可用于各种传输协议，例如UDP、TCP、SHM（共享内存传输协议）。</p></li>
+</ul>
+<div class="section" id="dds">
+<h3>DDS层<a class="headerlink" href="#dds" title="永久链接至标题"></a></h3>
+<ul class="simple">
+<li><p>域。标识 DDS 域的正整数。每个DomainParticipant 都会有一个分配的DDS 域，这样同一个域中的DomainParticipant 就可以进行通信，也可以隔离DDS 域之间的通信。该值必须由应用程序开发人员在创建 DomainParticipants 时提供。</p></li>
+<li><p>域参与者。包含其他 DDS 实体（例如发布者、订阅者、主题和多主题）的对象。它是允许创建它包含的先前实体以及配置它们的行为的实体。</p></li>
+<li><p>出版商。发布者使用 DataWriter 发布主题下的数据，后者从传输中读取数据。它是创建和配置它包含的 DataWriter 实体的实体，并且可能包含其中一个或多个。</p></li>
+<li><p>数据写入器。它是负责发布消息的实体。用户在创建此实体时必须提供一个主题，该主题将是发布数据的主题。发布是通过将数据对象写入 DataWriterHistory 中的更改来完成的。</p></li>
+<li><p>数据写入器历史记录。这是对数据对象的更改列表。当 DataWriter 继续在特定主题下发布数据时，它实际上会在此数据中创建更改。记录在历史记录中的正是这种变化。然后将这些更改发送到订阅该特定主题的 DataReader。</p></li>
+<li><p>订阅者。订阅者使用 DataReader 订阅主题，后者从传输中读取数据。它是创建和配置它包含的 DataReader 实体的实体，并且可能包含一个或多个 DataReader 实体。</p></li>
+<li><p>数据阅读器。它是订阅主​​题以接收发布的实体。创建此实体时，用户必须提供订阅主题。DataReader 接收消息作为其 HistoryDataReader 中的更改。</p></li>
+<li><p>数据阅读器历史记录。它包含DataReader 由于订阅某个主题而接收到的数据对象的变化。</p></li>
+<li><p>话题。将发布者的 DataWriter 与订阅者的 DataReader 绑定的实体。</p></li>
+</ul>
+</div>
+<div class="section" id="rtps">
+<h3>RTPS层<a class="headerlink" href="#rtps" title="永久链接至标题"></a></h3>
+<ul class="simple">
+<li><p>RTPS域。它是 DDS 域对 RTPS 协议的扩展。</p></li>
+<li><p>RTPS参与者。包含其他 RTPS 实体的实体。它允许配置和创建它包含的实体。</p></li>
+<li><p>RTPSWriter。消息的来源。它读取写入 DataWriterHistory 中的更改并将它们传输到它之前匹配的所有 RTPSReader。</p></li>
+<li><p>RTPS阅读器。消息的接收实体。它将 RTPSWriter 报告的更改写入 DataReaderHistory。</p></li>
+</ul>
+<p>—</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../rt_thread/Synchronize.html" class="btn btn-neutral float-left" title="线程间同步" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> 上一页</a>
+        <a href="../web/web_1.html" class="btn btn-neutral float-right" title="内网网站搭建" accesskey="n" rel="next">下一页 <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; 版权所有 xdt,海南大学.</p>
+  </div>
+
+  利用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 构建，使用了 
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">主题</a>
+    由 <a href="https://readthedocs.org">Read the Docs</a>开发.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

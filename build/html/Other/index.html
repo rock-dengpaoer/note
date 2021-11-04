@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="zh-CN" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>sphinx教程 &mdash; linux学习笔记  文档</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/translations.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> linux学习笔记
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="在文档中搜索" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Linux:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Linux/app_1.html">软件运行分析</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Linux/app_2.html">软件安装</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">rt_thread内核:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../rt_thread/thread.html">线程</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rt_thread/timer.html">时钟管理</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rt_thread/Synchronize.html">线程间同步</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">DDS:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Fast_DDS/Fast_DDS_1.html">Fast-DDS</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">网站搭建:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../web/web_1.html">内网网站搭建</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">杂项:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="Sphinx_Tutorials.html">sphinx安装与使用</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Sphinx_Tutorials.html#id6">sphinx简明教程</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Sphinx_Tutorials.html#id7">sphinx使用时需要注意的问题</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">周报</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Data/Data_weekly.html">2021-10</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">linux学习笔记</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>sphinx教程</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/Other/index.md.txt" rel="nofollow"> 查看页面源码</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="tex2jax_ignore mathjax_ignore section" id="sphinx">
+<h1>sphinx教程<a class="headerlink" href="#sphinx" title="永久链接至标题"></a></h1>
+<div class="section" id="python">
+<h2>安装python<a class="headerlink" href="#python" title="永久链接至标题"></a></h2>
+<p><strong>以windos为例</strong></p>
+<p>我选择安装的是python3.9</p>
+<p>链接为 <a class="reference external" href="https://www.python.org/downloads/release/python-397/">python</a></p>
+<p>下载windws安装程序（64）位，为所有用户安装，将环境变量添加到系统里。</p>
+<p>等待安装完成，结束之后，打开cmd，输入python 查看是否正常运行。</p>
+<p>正常运行python:<img alt="正常运行python" src="../_images/2.png" /></p>
+</div>
+<div class="section" id="id1">
+<h2>安装sphinx<a class="headerlink" href="#id1" title="永久链接至标题"></a></h2>
+<p>打开cmd终端，使用</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install -U sphinx
+</pre></div>
+</div>
+<p>命令进行安装</p>
+<p>安装:<img alt="" src="../_images/3.png" /></p>
+<p>安装在哪里不清楚，不管了。</p>
+<p>安装完成页面:<img alt="" src="../_images/4.png" /></p>
+<p>显示版本号:<img alt="" src="../_images/5.png" /></p>
+</div>
+<div class="section" id="id2">
+<h2>创建一个项目<a class="headerlink" href="#id2" title="永久链接至标题"></a></h2>
+<p>转到一个空的文件夹目录下。</p>
+<p>然后输入命令</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sphinx-quickstart
+</pre></div>
+</div>
+<p>是否需要创建隔离的文件夹，默认为不需要:<img alt="" src="../_images/6.png" /></p>
+<p>我选择的是需要，就输入y就行了。</p>
+<p>然后是项目名称</p>
+<p>名称:<img alt="" src="../_images/7.png" /></p>
+<p>然后作者姓名，版本号（版本号可以不填，直接回车）。</p>
+<p><img alt="" src="../_images/8.png" /></p>
+<p>设置语言为中文:<img alt="" src="../_images/9.png" /></p>
+<p>配置结束</p>
+<p>更多配置都在conf.py中。</p>
+</div>
+<div class="section" id="html">
+<h2>生成html文件<a class="headerlink" href="#html" title="永久链接至标题"></a></h2>
+<p>直接在项目目录里执行</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make html
+</pre></div>
+</div>
+<p>确保目录里包含Makefile文件。</p>
+</div>
+<div class="section" id="markdown">
+<h2>使用Markdown文件<a class="headerlink" href="#markdown" title="永久链接至标题"></a></h2>
+<p>安装 Markdown 解析器 MyST-Parser:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install --upgrade myst-parser
+</pre></div>
+</div>
+<p>把 myst_parser 添加到列表 已配置的扩展 中:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">extensions</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;myst_parser&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p><img alt="" src="../_images/11.png" /></p>
+<p>如果要使用不以“.md”为扩展名的 Markdown 文件，请调整 source_suffix 变量。下面的示例将配置 Sphinx 把所有扩展名为“.md”和“.txt”的文件解析为 Markdown</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">source_suffix</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;.rst&#39;</span><span class="p">:</span> <span class="s1">&#39;restructuredtext&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;.txt&#39;</span><span class="p">:</span> <span class="s1">&#39;markdown&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;.md&#39;</span><span class="p">:</span> <span class="s1">&#39;markdown&#39;</span><span class="p">,</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id3">
+<h2>更换html主题<a class="headerlink" href="#id3" title="永久链接至标题"></a></h2>
+<p>官方提供了很多主题，也配备了教程，<a class="reference external" href="https://sphinx-themes.org/">主题网站</a>。</p>
+<p>平常见的最多的还是,<a class="reference external" href="https://sphinx-themes.org/sample-sites/sphinx-rtd-theme/">阅读文档</a>.</p>
+</div>
+<div class="section" id="restructuredtext">
+<h2>reStructuredText初级入门<a class="headerlink" href="#restructuredtext" title="永久链接至标题"></a></h2>
+<p><a class="reference external" href="https://www.sphinx-doc.org/zh_CN/master/usage/restructuredtext/index.html">官方教程</a></p>
+<p><a class="reference external" href="https://iridescent.ink/HowToMakeDocs/Basic/reST.html">私人的教程</a></p>
+<p>后续再补充简明教程。</p>
+</div>
+<div class="section" id="id4">
+<h2>网站托管<a class="headerlink" href="#id4" title="永久链接至标题"></a></h2>
+<p>在<a class="reference external" href="https://readthedocs.org/">read the docs</a>注册一个账号。</p>
+<p><strong>如果与github账号就可以不用注册，直接关联</strong></p>
+<p>然后github新建一个公共的仓库，然后将项目里的文件全同步到仓库里。</p>
+<p>在read the docs网站上导入工程。</p>
+<p><img alt="" src="../_images/12.png" /></p>
+<p>等待构建完成。</p>
+<p>网址:<img alt="" src="../_images/13.png" /></p>
+<blockquote>
+<div><p>这些网址都可以打开网页。</p>
+</div></blockquote>
+<p><strong>服务器地址为美国，访问可能会比较慢。同时免费版会有一些广告</strong></p>
+<p>gitee还没有使用，后续再写。</p>
+<p>更换域名还没有测试，后续再搞。</p>
+</div>
+<div class="section" id="id5">
+<h2>中文搜索问题<a class="headerlink" href="#id5" title="永久链接至标题"></a></h2>
+<p>pip安装jieba，然后在conf.py里增加配置，再重新编译生成文档。</p>
+<p>pip安装的时候可能会超时，更换<a class="reference external" href="https://mirrors.tuna.tsinghua.edu.cn/help/pypi/">清华源</a>之后，顺利安装。</p>
+<p>这是教程<a class="reference external" href="https://www.shuzhiduo.com/A/MyJxQPXR5n/">链接</a></p>
+<blockquote>
+<div><p>这是windows的解决方案，但在linux下就失效了</p>
+</div></blockquote>
+<p>linux下，使用一个<a class="reference external" href="https://github.com/bosbyj/sphinx.search.zh_CN">支持简体中文搜索的插件</a>来解决问题。</p>
+<p>在我的服务器中，Sphinx的<img alt="目录为" src="../_images/14.png" />.+</p>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; 版权所有 2021, xdt.</p>
+  </div>
+
+  利用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 构建，使用了 
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">主题</a>
+    由 <a href="https://readthedocs.org">Read the Docs</a>开发.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

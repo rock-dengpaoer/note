@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="zh-CN" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>时钟管理 &mdash; linux学习笔记  文档</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/translations.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="线程间同步" href="Synchronize.html" />
+    <link rel="prev" title="线程" href="thread.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> linux学习笔记
+            <img src="../_static/logo.jpg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="在文档中搜索" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Linux:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Linux/app_1.html">软件运行分析</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Linux/app_2.html">软件安装</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">rt_thread内核:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="thread.html">线程</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">时钟管理</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Synchronize.html">线程间同步</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">DDS:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Fast_DDS/Fast_DDS_1.html">Fast-DDS</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">网站搭建:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../web/web_1.html">内网网站搭建</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">杂项:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Other/Sphinx_Tutorials.html">sphinx安装与使用</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Other/Sphinx_Tutorials.html#id14">sphinx简明教程</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Other/Sphinx_Tutorials.html#id15">sphinx使用时需要注意的问题</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">周报</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Data/Data_weekly.html">2021-10</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">linux学习笔记</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>时钟管理</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/rt_thread/timer.rst.txt" rel="nofollow"> 查看页面源码</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="id1">
+<h1>时钟管理<a class="headerlink" href="#id1" title="永久链接至标题"></a></h1>
+<p>创建动态定时器例程</p>
+<div class="literal-block-wrapper docutils container" id="id2">
+<div class="code-block-caption"><span class="caption-text">定时器的控制块</span><a class="headerlink" href="#id2" title="永久链接至代码"></a></div>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span> <span class="k">static</span> <span class="n">rt_timer_t</span> <span class="n">timer1</span><span class="p">;</span>
+ <span class="k">static</span> <span class="n">rt_timer_t</span> <span class="n">timer2</span><span class="p">;</span>
+ <span class="k">static</span> <span class="kt">int</span> <span class="n">cnt</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+ <span class="c1">//定时器1超时函数</span>
+ <span class="k">static</span> <span class="kt">void</span> <span class="nf">timeout1</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">parameter</span><span class="p">)</span>
+ <span class="p">{</span>
+
+     <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;periodic timer is timeout %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">cnt</span><span class="p">);</span>
+
+     <span class="c1">//运行10次，停止周期性定时器</span>
+     <span class="k">if</span><span class="p">(</span><span class="n">cnt</span><span class="o">++</span> <span class="o">&gt;=</span> <span class="mi">9</span><span class="p">)</span>
+     <span class="p">{</span>
+         <span class="n">rt_timer_stop</span><span class="p">(</span><span class="n">timer1</span><span class="p">);</span>
+         <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;periodic timer was stopped! </span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+     <span class="p">}</span>
+ <span class="p">}</span>
+
+ <span class="c1">//定时器2超时函数</span>
+ <span class="k">static</span> <span class="kt">void</span> <span class="nf">timeout2</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">parameter</span><span class="p">)</span>
+ <span class="p">{</span>
+     <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;one shot timer is timeout </span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+ <span class="p">}</span>
+
+ <span class="kt">int</span> <span class="nf">timer_sample</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+ <span class="p">{</span>
+     <span class="c1">//创建定时器1，周期性定时器</span>
+     <span class="n">timer1</span> <span class="o">=</span> <span class="n">rt_timer_create</span><span class="p">(</span><span class="s">&quot;timer1&quot;</span><span class="p">,</span>
+                             <span class="n">timeout1</span><span class="p">,</span>
+                             <span class="n">RT_NULL</span><span class="p">,</span>
+                             <span class="mi">10</span><span class="p">,</span>
+                             <span class="n">RT_TIMER_FLAG_PERIODIC</span><span class="p">);</span>
+
+     <span class="k">if</span><span class="p">(</span><span class="n">timer1</span> <span class="o">!=</span> <span class="n">RT_NULL</span><span class="p">)</span>
+         <span class="n">rt_timer_start</span><span class="p">(</span><span class="n">timer1</span><span class="p">);</span><span class="c1">//启动定时器</span>
+
+     <span class="c1">//创建定时器2，单次定时器</span>
+     <span class="n">timer2</span> <span class="o">=</span> <span class="n">rt_timer_create</span><span class="p">(</span><span class="s">&quot;timer2&quot;</span><span class="p">,</span>
+                             <span class="n">timeout2</span><span class="p">,</span>
+                             <span class="n">RT_NULL</span><span class="p">,</span>
+                             <span class="mi">30</span><span class="p">,</span>
+                             <span class="n">RT_TIMER_FLAG_ONE_SHOT</span><span class="p">);</span>
+     <span class="k">if</span><span class="p">(</span><span class="n">timer2</span> <span class="o">!=</span> <span class="n">RT_NULL</span><span class="p">)</span>
+             <span class="n">rt_timer_start</span><span class="p">(</span><span class="n">timer2</span><span class="p">);</span>
+
+     <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+
+ <span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="literal-block-wrapper docutils container" id="id3">
+<div class="code-block-caption"><span class="caption-text">初始化静态定时器例程</span><a class="headerlink" href="#id3" title="永久链接至代码"></a></div>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span> <span class="c1">//定时器的控制块</span>
+ <span class="k">static</span> <span class="k">struct</span> <span class="n">rt_timer</span> <span class="n">timer1</span><span class="p">;</span>
+ <span class="k">static</span> <span class="k">struct</span> <span class="n">rt_timer</span> <span class="n">timer2</span><span class="p">;</span>
+ <span class="k">static</span> <span class="kt">int</span> <span class="n">cnt</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+ <span class="c1">//定时器1超时函数</span>
+ <span class="k">static</span> <span class="kt">void</span> <span class="nf">timeout1</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">parameter</span><span class="p">)</span>
+ <span class="p">{</span>
+
+     <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;periodic timer is timeout</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+
+     <span class="k">if</span><span class="p">(</span><span class="n">cnt</span><span class="o">++</span> <span class="o">&gt;=</span> <span class="mi">9</span><span class="p">)</span>
+     <span class="p">{</span>
+         <span class="n">rt_timer_stop</span><span class="p">(</span><span class="o">&amp;</span><span class="n">timer1</span><span class="p">);</span>
+     <span class="p">}</span>
+ <span class="p">}</span>
+
+ <span class="c1">//定时器2超时函数</span>
+ <span class="k">static</span> <span class="kt">void</span> <span class="nf">timeout2</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">parameter</span><span class="p">)</span>
+ <span class="p">{</span>
+     <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;one shot timer is timeout</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+ <span class="p">}</span>
+
+ <span class="kt">int</span> <span class="nf">timer_static_sample</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+ <span class="p">{</span>
+     <span class="c1">//初始化定时器</span>
+     <span class="n">rt_timer_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">timer1</span><span class="p">,</span>
+                 <span class="s">&quot;timer1&quot;</span><span class="p">,</span> <span class="c1">//定时器名字是timer1</span>
+                 <span class="n">timeout1</span><span class="p">,</span> <span class="c1">//超时时回调的处理函数</span>
+                 <span class="n">RT_NULL</span><span class="p">,</span>  <span class="c1">//超时时回调的入口参数</span>
+                 <span class="mi">10</span><span class="p">,</span><span class="c1">//定时长度，以OS Tick为单位</span>
+                 <span class="n">RT_TIMER_FLAG_PERIODIC</span><span class="p">);</span><span class="c1">//周期性定时器</span>
+
+     <span class="n">rt_timer_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">timer2</span><span class="p">,</span>
+                 <span class="s">&quot;timeout2&quot;</span><span class="p">,</span>
+                 <span class="n">timeout2</span><span class="p">,</span>
+                 <span class="n">RT_NULL</span><span class="p">,</span>
+                 <span class="mi">30</span><span class="p">,</span>
+                 <span class="n">RT_TIMER_FLAG_ONE_SHOT</span><span class="p">);</span><span class="c1">//单次定时器</span>
+
+     <span class="c1">//启动定时器</span>
+     <span class="n">rt_timer_start</span><span class="p">(</span><span class="o">&amp;</span><span class="n">timer1</span><span class="p">);</span>
+     <span class="n">rt_timer_start</span><span class="p">(</span><span class="o">&amp;</span><span class="n">timer2</span><span class="p">);</span>
+
+     <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+ <span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="thread.html" class="btn btn-neutral float-left" title="线程" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> 上一页</a>
+        <a href="Synchronize.html" class="btn btn-neutral float-right" title="线程间同步" accesskey="n" rel="next">下一页 <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; 版权所有 xdt,海南大学.</p>
+  </div>
+
+  利用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 构建，使用了 
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">主题</a>
+    由 <a href="https://readthedocs.org">Read the Docs</a>开发.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

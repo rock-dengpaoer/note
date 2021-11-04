@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="zh-CN" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>线程间同步 &mdash; linux学习笔记  文档</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/translations.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="Fast-DDS" href="../Fast_DDS/Fast_DDS_1.html" />
+    <link rel="prev" title="时钟管理" href="timer.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> linux学习笔记
+            <img src="../_static/logo.jpg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="在文档中搜索" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Linux:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Linux/app_1.html">软件运行分析</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Linux/app_2.html">软件安装</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">rt_thread内核:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="thread.html">线程</a></li>
+<li class="toctree-l1"><a class="reference internal" href="timer.html">时钟管理</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">线程间同步</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">信号量</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id3">互斥量</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id4">互斥量防止线程优先级翻转</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id5">事件集</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id6">事件集的工作机制</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id7">事件集控制块</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id8">事件集的管理方式</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">DDS:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Fast_DDS/Fast_DDS_1.html">Fast-DDS</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">网站搭建:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../web/web_1.html">内网网站搭建</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">杂项:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Other/Sphinx_Tutorials.html">sphinx安装与使用</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Other/Sphinx_Tutorials.html#id14">sphinx简明教程</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Other/Sphinx_Tutorials.html#id15">sphinx使用时需要注意的问题</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">周报</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Data/Data_weekly.html">2021-10</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">linux学习笔记</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>线程间同步</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/rt_thread/Synchronize.rst.txt" rel="nofollow"> 查看页面源码</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="id1">
+<h1>线程间同步<a class="headerlink" href="#id1" title="永久链接至标题"></a></h1>
+<div class="section" id="id2">
+<h2>信号量<a class="headerlink" href="#id2" title="永久链接至标题"></a></h2>
+<div class="literal-block-wrapper docutils container" id="id13">
+<div class="code-block-caption"><span class="caption-text">信号量的使用</span><a class="headerlink" href="#id13" title="永久链接至代码"></a></div>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span> <span class="cp">#define THREAD_PRIORITY     25</span>
+ <span class="cp">#define THREAD_TIMESLICE    5</span>
+
+ <span class="c1">//指向信号量的指针</span>
+ <span class="k">static</span> <span class="n">rt_sem_t</span> <span class="n">dynamic_sem</span> <span class="o">=</span> <span class="n">RT_NULL</span><span class="p">;</span>
+
+ <span class="k">static</span> <span class="kt">char</span> <span class="n">thread1_stack</span><span class="p">[</span><span class="mi">1024</span><span class="p">];</span>
+ <span class="k">static</span> <span class="k">struct</span> <span class="n">rt_thread</span> <span class="n">thread1</span><span class="p">;</span>
+
+ <span class="k">static</span> <span class="kt">void</span> <span class="nf">rt_thread1_entry</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">parameter</span><span class="p">)</span>
+ <span class="p">{</span>
+     <span class="k">static</span> <span class="n">rt_uint8_t</span> <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+     <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+     <span class="p">{</span>
+         <span class="k">if</span><span class="p">(</span><span class="n">count</span> <span class="o">&lt;=</span> <span class="mi">100</span><span class="p">)</span>
+         <span class="p">{</span>
+             <span class="n">count</span><span class="o">++</span><span class="p">;</span>
+         <span class="p">}</span>
+         <span class="k">else</span> <span class="p">{</span>
+             <span class="k">return</span><span class="p">;</span>
+         <span class="p">}</span>
+         <span class="k">if</span><span class="p">(</span><span class="mi">0</span> <span class="o">==</span> <span class="p">(</span><span class="n">count</span> <span class="o">%</span> <span class="mi">10</span><span class="p">))</span>
+         <span class="p">{</span>
+             <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;t1 release a dynamic semaphore.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+             <span class="n">rt_sem_release</span><span class="p">(</span><span class="n">dynamic_sem</span><span class="p">);</span><span class="c1">//释放一次信号量</span>
+         <span class="p">}</span>
+     <span class="p">}</span>
+ <span class="p">}</span>
+
+ <span class="k">static</span> <span class="kt">char</span> <span class="n">thread2_stack</span><span class="p">[</span><span class="mi">1024</span><span class="p">];</span>
+ <span class="k">static</span> <span class="k">struct</span> <span class="n">rt_thread</span> <span class="n">thread2</span><span class="p">;</span>
+
+ <span class="k">static</span> <span class="kt">void</span> <span class="nf">rt_thread2_entry</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">parameter</span><span class="p">)</span>
+ <span class="p">{</span>
+     <span class="k">static</span> <span class="n">rt_err_t</span> <span class="n">result</span><span class="p">;</span>
+     <span class="k">static</span> <span class="n">rt_uint8_t</span> <span class="n">number</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+     <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+     <span class="p">{</span>
+         <span class="c1">//永久方式等待信号量，获取到信号量，则执行number自加的操作</span>
+         <span class="n">result</span> <span class="o">=</span> <span class="n">rt_sem_take</span><span class="p">(</span><span class="n">dynamic_sem</span><span class="p">,</span> <span class="n">RT_WAITING_FOREVER</span><span class="p">);</span>
+         <span class="k">if</span><span class="p">(</span><span class="n">result</span> <span class="o">!=</span> <span class="n">RT_EOK</span><span class="p">)</span>
+         <span class="p">{</span>
+             <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;t2 take a dynamic semaphore, faild.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+             <span class="n">rt_sem_delete</span><span class="p">(</span><span class="n">dynamic_sem</span><span class="p">);</span>
+             <span class="k">return</span><span class="p">;</span>
+         <span class="p">}</span>
+         <span class="k">else</span> <span class="p">{</span>
+             <span class="n">number</span><span class="o">++</span><span class="p">;</span>
+             <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;t2 take a dynamic semaphore. number = %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">number</span><span class="p">);</span>
+         <span class="p">}</span>
+     <span class="p">}</span>
+ <span class="p">}</span>
+
+
+ <span class="c1">//信号量示例的初始化</span>
+ <span class="kt">int</span> <span class="nf">semaphore_sample</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+ <span class="p">{</span>
+     <span class="c1">//创建一个动态信号量，初始化是0，先进先出</span>
+     <span class="n">dynamic_sem</span> <span class="o">=</span> <span class="n">rt_sem_create</span><span class="p">(</span><span class="s">&quot;dsm&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">RT_IPC_FLAG_FIFO</span><span class="p">);</span>
+
+     <span class="k">if</span><span class="p">(</span><span class="n">dynamic_sem</span> <span class="o">==</span> <span class="n">RT_NULL</span><span class="p">)</span>
+     <span class="p">{</span>
+         <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;create dynamic semaphore failed.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+         <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+     <span class="p">}</span>
+     <span class="k">else</span> <span class="p">{</span>
+         <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;create done. dynamic semaphore value = 0.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+     <span class="p">}</span>
+
+     <span class="n">rt_thread_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">thread1</span><span class="p">,</span> <span class="s">&quot;thread1&quot;</span><span class="p">,</span>
+                     <span class="n">rt_thread1_entry</span><span class="p">,</span>
+                     <span class="n">RT_NULL</span><span class="p">,</span>
+                     <span class="o">&amp;</span><span class="n">thread1_stack</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                     <span class="k">sizeof</span><span class="p">(</span><span class="n">thread1_stack</span><span class="p">),</span>
+                     <span class="n">THREAD_PRIORITY</span><span class="p">,</span>
+                     <span class="n">THREAD_TIMESLICE</span><span class="p">);</span>
+
+     <span class="n">rt_thread_startup</span><span class="p">(</span><span class="o">&amp;</span><span class="n">thread1</span><span class="p">);</span>
+
+     <span class="n">rt_thread_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">thread2</span><span class="p">,</span> <span class="s">&quot;thread2&quot;</span><span class="p">,</span>
+                         <span class="n">rt_thread2_entry</span><span class="p">,</span>
+                         <span class="n">RT_NULL</span><span class="p">,</span>
+                         <span class="o">&amp;</span><span class="n">thread2_stack</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                         <span class="k">sizeof</span><span class="p">(</span><span class="n">thread1_stack</span><span class="p">),</span>
+                         <span class="n">THREAD_PRIORITY</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+                         <span class="n">THREAD_TIMESLICE</span><span class="p">);</span>
+
+     <span class="n">rt_thread_startup</span><span class="p">(</span><span class="o">&amp;</span><span class="n">thread2</span><span class="p">);</span>
+
+     <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+ <span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="literal-block-wrapper docutils container" id="id14">
+<div class="code-block-caption"><span class="caption-text">生产者消费者例程</span><a class="headerlink" href="#id14" title="永久链接至代码"></a></div>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span> <span class="cp">#define THREAD_PRIORITY     6</span>
+ <span class="cp">#define THREAD_STACK_SIZE   512</span>
+ <span class="cp">#define THREAD_TIMESLICE    5</span>
+
+ <span class="c1">//定义最大能够产生5个元素</span>
+ <span class="cp">#define MAXSEX 5</span>
+
+ <span class="c1">//用于放置生产的整数数组</span>
+ <span class="n">rt_uint32_t</span> <span class="n">array</span><span class="p">[</span><span class="n">MAXSEX</span><span class="p">];</span>
+
+ <span class="c1">//指向生产者、消费者在array数组中的读写位置</span>
+ <span class="k">static</span> <span class="n">rt_uint32_t</span> <span class="n">set</span><span class="p">,</span><span class="n">get</span><span class="p">;</span>
+
+ <span class="k">static</span> <span class="n">rt_thread_t</span> <span class="n">producer_tid</span> <span class="o">=</span> <span class="n">RT_NULL</span><span class="p">;</span>
+ <span class="k">static</span> <span class="n">rt_thread_t</span> <span class="n">consumer_tid</span> <span class="o">=</span> <span class="n">RT_NULL</span><span class="p">;</span>
+
+ <span class="k">struct</span> <span class="n">rt_semaphore</span> <span class="n">sem_lock</span><span class="p">;</span>
+ <span class="k">struct</span> <span class="n">rt_semaphore</span> <span class="n">sem_empty</span><span class="p">,</span> <span class="n">sem_full</span><span class="p">;</span>
+
+ <span class="c1">//生产者线程入口函数</span>
+ <span class="kt">void</span> <span class="nf">producer_thread_entry</span><span class="p">(</span><span class="kt">void</span><span class="o">*</span> <span class="n">parameter</span><span class="p">)</span>
+ <span class="p">{</span>
+     <span class="kt">int</span> <span class="n">cnt</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+     <span class="k">while</span><span class="p">(</span><span class="n">cnt</span> <span class="o">&lt;</span> <span class="mi">10</span><span class="p">)</span>
+     <span class="p">{</span>
+         <span class="n">rt_sem_take</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sem_empty</span><span class="p">,</span> <span class="n">RT_WAITING_FOREVER</span><span class="p">);</span>
+
+         <span class="n">rt_sem_take</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sem_lock</span><span class="p">,</span> <span class="n">RT_WAITING_FOREVER</span><span class="p">);</span>
+         <span class="n">array</span><span class="p">[</span><span class="n">set</span> <span class="o">%</span> <span class="n">MAXSEX</span><span class="p">]</span> <span class="o">=</span> <span class="n">cnt</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+         <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;the producer generates a number: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">array</span><span class="p">[</span><span class="n">set</span> <span class="o">%</span> <span class="n">MAXSEX</span><span class="p">]);</span>
+         <span class="n">set</span><span class="o">++</span><span class="p">;</span>
+         <span class="n">rt_sem_release</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sem_lock</span><span class="p">);</span>
+
+         <span class="n">rt_sem_release</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sem_full</span><span class="p">);</span>
+         <span class="n">cnt</span><span class="o">++</span><span class="p">;</span>
+
+         <span class="n">rt_thread_delay</span><span class="p">(</span><span class="mi">20</span><span class="p">);</span>
+     <span class="p">}</span>
+
+     <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;the producer exit!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+ <span class="p">}</span>
+
+ <span class="c1">//消费者入口函数</span>
+ <span class="kt">void</span> <span class="nf">consumer_thread_entry</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">parameter</span><span class="p">)</span>
+ <span class="p">{</span>
+     <span class="n">rt_uint32_t</span> <span class="n">sum</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+     <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+     <span class="p">{</span>
+         <span class="n">rt_sem_take</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sem_full</span><span class="p">,</span> <span class="n">RT_WAITING_FOREVER</span><span class="p">);</span>
+
+         <span class="n">rt_sem_take</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sem_lock</span><span class="p">,</span> <span class="n">RT_WAITING_FOREVER</span><span class="p">);</span>
+
+         <span class="n">sum</span> <span class="o">+=</span> <span class="n">array</span><span class="p">[</span><span class="n">get</span> <span class="o">%</span> <span class="n">MAXSEX</span><span class="p">];</span>
+
+         <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;the consumer[%d] get a number:%d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">get</span> <span class="o">%</span> <span class="n">MAXSEX</span><span class="p">),</span> <span class="n">array</span><span class="p">[</span><span class="n">get</span> <span class="o">%</span> <span class="n">MAXSEX</span><span class="p">]);</span>
+
+         <span class="n">get</span><span class="o">++</span><span class="p">;</span>
+
+         <span class="n">rt_sem_release</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sem_lock</span><span class="p">);</span>
+         <span class="n">rt_sem_release</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sem_empty</span><span class="p">);</span>
+         <span class="k">if</span> <span class="p">(</span><span class="n">get</span> <span class="o">==</span> <span class="mi">10</span> <span class="p">)</span>
+             <span class="k">break</span><span class="p">;</span>
+
+         <span class="n">rt_thread_mdelay</span><span class="p">(</span><span class="mi">50</span><span class="p">);</span>
+     <span class="p">}</span>
+
+     <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;the consumer sum is : %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">sum</span><span class="p">);</span>
+     <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;the consumer exit!</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+ <span class="p">}</span>
+
+ <span class="kt">int</span> <span class="nf">producer_consumer</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+ <span class="p">{</span>
+     <span class="c1">//初始化</span>
+     <span class="n">get</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+     <span class="n">set</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+     <span class="c1">//信号量初始化</span>
+     <span class="n">rt_sem_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sem_lock</span><span class="p">,</span> <span class="s">&quot;lock&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">RT_IPC_FLAG_FIFO</span><span class="p">);</span>
+     <span class="n">rt_sem_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sem_empty</span><span class="p">,</span> <span class="s">&quot;empty&quot;</span><span class="p">,</span> <span class="n">MAXSEX</span><span class="p">,</span> <span class="n">RT_IPC_FLAG_FIFO</span><span class="p">);</span>
+     <span class="n">rt_sem_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">sem_full</span><span class="p">,</span> <span class="s">&quot;full&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">RT_IPC_FLAG_FIFO</span><span class="p">);</span>
+
+     <span class="c1">//生产者线程</span>
+     <span class="n">producer_tid</span> <span class="o">=</span> <span class="n">rt_thread_create</span><span class="p">(</span><span class="s">&quot;producer&quot;</span><span class="p">,</span>
+                                     <span class="n">producer_thread_entry</span><span class="p">,</span>
+                                     <span class="n">RT_NULL</span><span class="p">,</span>
+                                     <span class="n">THREAD_STACK_SIZE</span><span class="p">,</span>
+                                     <span class="n">THREAD_PRIORITY</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+                                     <span class="n">THREAD_TIMESLICE</span><span class="p">);</span>
+
+     <span class="k">if</span><span class="p">(</span><span class="n">producer_tid</span> <span class="o">!=</span> <span class="n">RT_NULL</span><span class="p">)</span>
+     <span class="p">{</span>
+         <span class="n">rt_thread_startup</span><span class="p">(</span><span class="n">producer_tid</span><span class="p">);</span><span class="c1">//运行线程</span>
+     <span class="p">}</span>
+     <span class="k">else</span>
+     <span class="p">{</span>
+         <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;create thread producer failed&quot;</span><span class="p">);</span>
+         <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+     <span class="p">}</span>
+
+     <span class="c1">//消费者线程</span>
+     <span class="n">consumer_tid</span> <span class="o">=</span> <span class="n">rt_thread_create</span><span class="p">(</span><span class="s">&quot;consumer&quot;</span><span class="p">,</span>
+                                     <span class="n">consumer_thread_entry</span><span class="p">,</span>
+                                     <span class="n">RT_NULL</span><span class="p">,</span>
+                                     <span class="n">THREAD_STACK_SIZE</span><span class="p">,</span>
+                                     <span class="n">THREAD_PRIORITY</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span>
+                                     <span class="n">THREAD_TIMESLICE</span><span class="p">);</span>
+
+     <span class="k">if</span><span class="p">(</span><span class="n">consumer_tid</span> <span class="o">!=</span> <span class="n">RT_NULL</span><span class="p">)</span>
+     <span class="p">{</span>
+         <span class="n">rt_thread_startup</span><span class="p">(</span><span class="n">consumer_tid</span><span class="p">);</span><span class="c1">//运行线程</span>
+     <span class="p">}</span>
+     <span class="k">else</span>
+     <span class="p">{</span>
+         <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;create thread consumer failed&quot;</span><span class="p">);</span>
+         <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+     <span class="p">}</span>
+
+     <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+ <span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="id3">
+<h2>互斥量<a class="headerlink" href="#id3" title="永久链接至标题"></a></h2>
+<p>互斥量是一种保护共享资源的方法，当一个线程拥有互斥量的时候，可以保护共享资源不被其他线程破坏。</p>
+<blockquote>
+<div><p><strong>例子</strong></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>有两个线程，线程1和线程2，线程1对两个number分别进行加1操作；线程2也对两个number进行加1操作，使用互斥量保证线程改变两个number值的操作不被打断。
+</pre></div>
+</div>
+</div></blockquote>
+<div class="literal-block-wrapper docutils container" id="id15">
+<div class="code-block-caption"><span class="caption-text">互斥量例程</span><a class="headerlink" href="#id15" title="永久链接至代码"></a></div>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span> <span class="cp">#define THREAD_PRIORITY     8</span>
+ <span class="cp">#define THREAD_TIMESLICE    5</span>
+
+ <span class="k">static</span> <span class="n">rt_mutex_t</span> <span class="n">dynamic_mutex</span> <span class="o">=</span> <span class="n">RT_NULL</span><span class="p">;</span>
+ <span class="k">static</span> <span class="n">rt_uint8_t</span> <span class="n">number1</span><span class="p">,</span><span class="n">number2</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+ <span class="k">static</span> <span class="kt">char</span> <span class="n">thread1_stack</span><span class="p">[</span><span class="mi">1024</span><span class="p">];</span>
+ <span class="k">static</span> <span class="k">struct</span> <span class="n">rt_thread</span> <span class="n">thread1</span><span class="p">;</span>
+
+ <span class="c1">//线程1入口函数</span>
+ <span class="k">static</span> <span class="kt">void</span> <span class="nf">rt_thread_entry1</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">parameter</span><span class="p">)</span>
+ <span class="p">{</span>
+     <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+     <span class="p">{</span>
+         <span class="n">rt_mutex_take</span><span class="p">(</span><span class="n">dynamic_mutex</span><span class="p">,</span> <span class="n">RT_WAITING_FOREVER</span><span class="p">);</span>
+         <span class="n">number1</span><span class="o">++</span><span class="p">;</span>
+         <span class="n">rt_thread_mdelay</span><span class="p">(</span><span class="mi">10</span><span class="p">);</span>
+         <span class="n">number2</span><span class="o">++</span><span class="p">;</span>
+         <span class="n">rt_mutex_release</span><span class="p">(</span><span class="n">dynamic_mutex</span><span class="p">);</span>
+     <span class="p">}</span>
+ <span class="p">}</span>
+
+ <span class="k">static</span> <span class="kt">char</span> <span class="n">thread2_stack</span><span class="p">[</span><span class="mi">1024</span><span class="p">];</span>
+ <span class="k">static</span> <span class="k">struct</span> <span class="n">rt_thread</span> <span class="n">thread2</span><span class="p">;</span>
+
+ <span class="c1">//线程2入口函数</span>
+ <span class="k">static</span> <span class="kt">void</span> <span class="nf">rt_thread_entry2</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">parameter</span><span class="p">)</span>
+ <span class="p">{</span>
+     <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+     <span class="p">{</span>
+         <span class="n">rt_mutex_take</span><span class="p">(</span><span class="n">dynamic_mutex</span><span class="p">,</span> <span class="n">RT_WAITING_FOREVER</span><span class="p">);</span>
+         <span class="k">if</span><span class="p">(</span><span class="n">number1</span> <span class="o">!=</span> <span class="n">number2</span><span class="p">)</span>
+         <span class="p">{</span>
+             <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;not protect.number1 = %d, number2 = %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">number1</span><span class="p">,</span> <span class="n">number2</span><span class="p">);</span>
+         <span class="p">}</span>
+         <span class="k">else</span> <span class="p">{</span>
+             <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;mutex protect, number1 = number2 is %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">number1</span><span class="p">);</span>
+         <span class="p">}</span>
+
+         <span class="n">number1</span><span class="o">++</span><span class="p">;</span>
+         <span class="n">number2</span><span class="o">++</span><span class="p">;</span>
+         <span class="n">rt_mutex_release</span><span class="p">(</span><span class="n">dynamic_mutex</span><span class="p">);</span>
+
+         <span class="k">if</span><span class="p">(</span><span class="n">number1</span> <span class="o">&gt;=</span> <span class="mi">50</span><span class="p">)</span>
+             <span class="k">return</span><span class="p">;</span>
+     <span class="p">}</span>
+ <span class="p">}</span>
+
+ <span class="kt">int</span> <span class="nf">mutex_sample</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+ <span class="p">{</span>
+     <span class="n">dynamic_mutex</span> <span class="o">=</span> <span class="n">rt_mutex_create</span><span class="p">(</span><span class="s">&quot;dmutex&quot;</span><span class="p">,</span> <span class="n">RT_IPC_FLAG_FIFO</span><span class="p">);</span><span class="c1">//创建互斥量，先进先出</span>
+
+     <span class="k">if</span><span class="p">(</span><span class="n">dynamic_mutex</span> <span class="o">==</span> <span class="n">RT_NULL</span><span class="p">)</span>
+     <span class="p">{</span>
+         <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;create dynamic mutex failed.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+         <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+     <span class="p">}</span>
+
+     <span class="c1">//初始化线程1</span>
+     <span class="n">rt_thread_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">thread1</span><span class="p">,</span>
+                 <span class="s">&quot;thrad1&quot;</span><span class="p">,</span>
+                 <span class="n">rt_thread_entry1</span><span class="p">,</span>
+                 <span class="n">RT_NULL</span><span class="p">,</span>
+                 <span class="n">thread1_stack</span><span class="p">,</span>
+                 <span class="k">sizeof</span><span class="p">(</span><span class="n">thread1_stack</span><span class="p">),</span>
+                 <span class="n">THREAD_PRIORITY</span><span class="p">,</span>
+                 <span class="n">THREAD_TIMESLICE</span><span class="p">);</span>
+
+     <span class="n">rt_thread_startup</span><span class="p">(</span><span class="o">&amp;</span><span class="n">thread1</span><span class="p">);</span>
+
+     <span class="c1">//初始化线程2</span>
+     <span class="n">rt_thread_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">thread2</span><span class="p">,</span>
+                     <span class="s">&quot;thrad2&quot;</span><span class="p">,</span>
+                     <span class="n">rt_thread_entry2</span><span class="p">,</span>
+                     <span class="n">RT_NULL</span><span class="p">,</span>
+                     <span class="n">thread2_stack</span><span class="p">,</span>
+                     <span class="k">sizeof</span><span class="p">(</span><span class="n">thread2_stack</span><span class="p">),</span>
+                     <span class="n">THREAD_PRIORITY</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+                     <span class="n">THREAD_TIMESLICE</span><span class="p">);</span>
+
+     <span class="n">rt_thread_startup</span><span class="p">(</span><span class="o">&amp;</span><span class="n">thread2</span><span class="p">);</span>
+
+     <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+ <span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="id4">
+<h2>互斥量防止线程优先级翻转<a class="headerlink" href="#id4" title="永久链接至标题"></a></h2>
+<p>优先级翻转，是指当一个高优先级线程试图通过信号量机智访问共享资源是，如果该信号量已被低优先级线程持有，而这个低优先级线程在运行过程中可能又被一些中等优先级的线程抢占，从而造成高优先级线程被许多较低优先级的线程堵塞，实时性难以得到保证。</p>
+<p>在RT-Thread操作系统中，互斥量可以解决优先级翻转问题，使用优先级继承算法实现。优先级继承是通过在线程A尝试获取共享资源而被挂起的期间内，将线程C的优先级提升到线程A的优先级别，从而解决优先级翻转引起的问题。</p>
+<p>优先级继承是指，提高某个占有某种资源的低优先级线程的优先级，使之与所有等待该资源的线程中优先级最高的那个线程的优先级相等，然后执行，而当这个低优先级线程释放该资源时，优先级重新回到初始设定。</p>
+<p>这个例子创建3个动态线程以检查只有互斥量时，持有的线程优先级是否被调整到等待线程优先级中的最高级</p>
+<div class="literal-block-wrapper docutils container" id="id16">
+<div class="code-block-caption"><span class="caption-text">防止优先级翻转例程</span><a class="headerlink" href="#id16" title="永久链接至代码"></a></div>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span> <span class="c1">//指向线程控制块的指针</span>
+ <span class="k">static</span> <span class="n">rt_thread_t</span> <span class="n">tid1</span> <span class="o">=</span> <span class="n">RT_NULL</span><span class="p">;</span>
+ <span class="k">static</span> <span class="n">rt_thread_t</span> <span class="n">tid2</span> <span class="o">=</span> <span class="n">RT_NULL</span><span class="p">;</span>
+ <span class="k">static</span> <span class="n">rt_thread_t</span> <span class="n">tid3</span> <span class="o">=</span> <span class="n">RT_NULL</span><span class="p">;</span>
+ <span class="k">static</span> <span class="n">rt_mutex_t</span> <span class="n">mutex</span> <span class="o">=</span><span class="n">RT_NULL</span><span class="p">;</span>
+
+ <span class="cp">#define THREAD_PRIORITY     10</span>
+ <span class="cp">#define THREAD_STACK_SIZE   512</span>
+ <span class="cp">#define THREAD_TIMESLICE    5</span>
+
+ <span class="c1">//线程1入口函数</span>
+ <span class="k">static</span> <span class="kt">void</span> <span class="nf">thread1_entry</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">parameter</span><span class="p">)</span>
+ <span class="p">{</span>
+     <span class="c1">//先让低优先级运行</span>
+     <span class="n">rt_thread_delay</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span>
+
+     <span class="c1">//此时thread3持有mutex，而thread2等待持有mutex</span>
+ <span class="c1">//    检查thread2与threa3的优先级情况</span>
+
+     <span class="k">if</span><span class="p">(</span><span class="n">tid2</span><span class="o">-&gt;</span><span class="n">current_priority</span> <span class="o">!=</span> <span class="n">tid3</span><span class="o">-&gt;</span><span class="n">current_priority</span><span class="p">)</span>
+     <span class="p">{</span>
+ <span class="c1">//        优先级不同，调试失败</span>
+         <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;the priority of thread2 is: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">tid2</span><span class="o">-&gt;</span><span class="n">current_priority</span><span class="p">);</span>
+         <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;the priority of thread3 is: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">tid3</span><span class="o">-&gt;</span><span class="n">current_priority</span><span class="p">);</span>
+         <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;test failed&quot;</span><span class="p">);</span>
+         <span class="k">return</span><span class="p">;</span>
+     <span class="p">}</span>
+     <span class="k">else</span> <span class="p">{</span>
+         <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;the priority of thread2 is: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">tid2</span><span class="o">-&gt;</span><span class="n">current_priority</span><span class="p">);</span>
+         <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;the priority of thread3 is: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">tid3</span><span class="o">-&gt;</span><span class="n">current_priority</span><span class="p">);</span>
+         <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;test OK！</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+     <span class="p">}</span>
+ <span class="p">}</span>
+
+ <span class="c1">//线程2入口函数</span>
+ <span class="k">static</span> <span class="kt">void</span> <span class="nf">thread2_entry</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">parameter</span><span class="p">)</span>
+ <span class="p">{</span>
+     <span class="n">rt_err_t</span> <span class="n">result</span><span class="p">;</span>
+
+     <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;the priority of thread2 is %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">tid2</span><span class="o">-&gt;</span><span class="n">current_priority</span><span class="p">);</span>
+
+ <span class="c1">//    让低优先级线程运行</span>
+     <span class="n">rt_thread_delay</span><span class="p">(</span><span class="mi">50</span><span class="p">);</span>
+
+ <span class="c1">//    试图持有互斥锁，此时threa3持有互斥锁，应把thread3的优先级提升到与thread2相同的优先级</span>
+     <span class="n">result</span> <span class="o">=</span> <span class="n">rt_mutex_take</span><span class="p">(</span><span class="n">mutex</span><span class="p">,</span> <span class="n">RT_WAITING_FOREVER</span><span class="p">);</span>
+
+     <span class="k">if</span><span class="p">(</span><span class="n">result</span> <span class="o">==</span> <span class="n">RT_EOK</span><span class="p">)</span>
+     <span class="p">{</span>
+ <span class="c1">//       释放互斥锁</span>
+         <span class="n">rt_mutex_release</span><span class="p">(</span><span class="n">mutex</span><span class="p">);</span>
+     <span class="p">}</span>
+ <span class="p">}</span>
+
+ <span class="c1">//线程3入口函数</span>
+ <span class="k">static</span> <span class="kt">void</span> <span class="nf">thread3_entry</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">parameter</span><span class="p">)</span>
+ <span class="p">{</span>
+     <span class="n">rt_tick_t</span> <span class="n">tick</span><span class="p">;</span>
+     <span class="n">rt_err_t</span> <span class="n">result</span><span class="p">;</span>
+
+     <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;the priority of thread3 is %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">tid3</span><span class="o">-&gt;</span><span class="n">current_priority</span><span class="p">);</span>
+
+ <span class="c1">//    获取互斥量</span>
+     <span class="n">result</span> <span class="o">=</span> <span class="n">rt_mutex_take</span><span class="p">(</span><span class="n">mutex</span><span class="p">,</span> <span class="n">RT_WAITING_FOREVER</span><span class="p">);</span>
+     <span class="k">if</span><span class="p">(</span><span class="n">result</span> <span class="o">!=</span> <span class="n">RT_EOK</span><span class="p">)</span>
+     <span class="p">{</span>
+         <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;thread3 take a mutex, failed</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+     <span class="p">}</span>
+ <span class="c1">//    做一个长时间的延时，5000ms</span>
+     <span class="n">tick</span> <span class="o">=</span> <span class="n">rt_tick_get</span><span class="p">();</span>
+     <span class="k">while</span><span class="p">(</span><span class="n">rt_tick_get</span><span class="p">()</span> <span class="o">-</span> <span class="n">tick</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">RT_TICK_PER_SECOND</span> <span class="o">/</span> <span class="mi">2</span><span class="p">));</span>
+
+ <span class="c1">//    释放互斥量</span>
+     <span class="n">rt_mutex_release</span><span class="p">(</span><span class="n">mutex</span><span class="p">);</span>
+ <span class="p">}</span>
+
+ <span class="kt">int</span> <span class="nf">pri_inversion</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+ <span class="p">{</span>
+     <span class="n">mutex</span> <span class="o">=</span> <span class="n">rt_mutex_create</span><span class="p">(</span><span class="s">&quot;mutex&quot;</span><span class="p">,</span> <span class="n">RT_IPC_FLAG_FIFO</span><span class="p">);</span>
+
+     <span class="k">if</span><span class="p">(</span><span class="n">mutex</span> <span class="o">==</span> <span class="n">RT_NULL</span><span class="p">)</span>
+     <span class="p">{</span>
+         <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;create dynamic mutex failed </span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+         <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+     <span class="p">}</span>
+
+     <span class="n">tid1</span> <span class="o">=</span> <span class="n">rt_thread_create</span><span class="p">(</span><span class="s">&quot;thread1&quot;</span><span class="p">,</span>
+                             <span class="n">thread1_entry</span><span class="p">,</span>
+                             <span class="n">RT_NULL</span><span class="p">,</span>
+                             <span class="n">THREAD_STACK_SIZE</span><span class="p">,</span>
+                             <span class="n">THREAD_PRIORITY</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+                             <span class="n">THREAD_TIMESLICE</span><span class="p">);</span>
+
+     <span class="k">if</span><span class="p">(</span><span class="n">tid1</span> <span class="o">!=</span> <span class="n">RT_NULL</span><span class="p">)</span>
+         <span class="n">rt_thread_startup</span><span class="p">(</span><span class="n">tid1</span><span class="p">);</span>
+
+     <span class="n">tid2</span> <span class="o">=</span> <span class="n">rt_thread_create</span><span class="p">(</span><span class="s">&quot;thread2&quot;</span><span class="p">,</span>
+                                 <span class="n">thread2_entry</span><span class="p">,</span>
+                                 <span class="n">RT_NULL</span><span class="p">,</span>
+                                 <span class="n">THREAD_STACK_SIZE</span><span class="p">,</span>
+                                 <span class="n">THREAD_PRIORITY</span><span class="p">,</span>
+                                 <span class="n">THREAD_TIMESLICE</span><span class="p">);</span>
+
+     <span class="k">if</span><span class="p">(</span><span class="n">tid2</span> <span class="o">!=</span> <span class="n">RT_NULL</span><span class="p">)</span>
+             <span class="n">rt_thread_startup</span><span class="p">(</span><span class="n">tid2</span><span class="p">);</span>
+
+     <span class="n">tid3</span> <span class="o">=</span> <span class="n">rt_thread_create</span><span class="p">(</span><span class="s">&quot;thread3&quot;</span><span class="p">,</span>
+                                 <span class="n">thread3_entry</span><span class="p">,</span>
+                                 <span class="n">RT_NULL</span><span class="p">,</span>
+                                 <span class="n">THREAD_STACK_SIZE</span><span class="p">,</span>
+                                 <span class="n">THREAD_PRIORITY</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span>
+                                 <span class="n">THREAD_TIMESLICE</span><span class="p">);</span>
+     <span class="k">if</span><span class="p">(</span><span class="n">tid3</span> <span class="o">!=</span> <span class="n">RT_NULL</span><span class="p">)</span>
+             <span class="n">rt_thread_startup</span><span class="p">(</span><span class="n">tid3</span><span class="p">);</span>
+
+     <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+
+
+ <span class="p">}</span>
+ <span class="c1">//线程3先持有互斥量，而后线程2试图持有互斥量，此时线程3的优先级被提升为和线程2的优先级相同。</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="id5">
+<h2>事件集<a class="headerlink" href="#id5" title="永久链接至标题"></a></h2>
+<div class="section" id="id6">
+<h3>事件集的工作机制<a class="headerlink" href="#id6" title="永久链接至标题"></a></h3>
+<p>特点是实现 <strong>一对多、多对多</strong> 的同步:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>即一个线程与多个事件的关系可以设置为其中任意一个事件唤醒线程，或几个事件都达到后才唤醒线程进行
+后续的处理；同样，事件也可以是多个线程同步多个事件。
+</pre></div>
+</div>
+<p>线程通过“逻辑与”或“逻辑或”将一个或多个事件关联起来，形成事件组合。</p>
+<p>事件的“逻辑或”也称为独立型同步，指的是线程与任何事件之一发生同步；</p>
+<p>事件“逻辑与”也称关联型同步，指的是线程与若干事件都发生同步；</p>
+<div class="admonition note">
+<p class="admonition-title">注解</p>
+<p>事件集的特点</p>
+<ul class="simple">
+<li><p>事件只与线程相关，事件间相互独立。</p></li>
+<li><p>事件仅用于同步，不提供数据传输功能；</p></li>
+<li><p>事件无排队性，即多次向线程发送同一个事件（如果线程还未来得及读走），其效果等同于只发送一次。</p></li>
+</ul>
+</div>
+<p>每个线程都拥有一个事件信息标记</p>
+<ul class="simple">
+<li><p>RT_EVENT_FLAG_OR 逻辑或</p></li>
+<li><p>RT_EVENT_FLAG_AND 逻辑与</p></li>
+<li><p>RT_EVENT_FLAG_CLEAR 清除标记</p></li>
+</ul>
+<div class="section" id="id7">
+<h4>事件集控制块<a class="headerlink" href="#id7" title="永久链接至标题"></a></h4>
+<p>事件集控制块是操作系统用于管理事件的一个数据结构，由结构体struct rt_event表示。</p>
+<p>另外一种C表达方式rt_event_t 表示的是事件集的句柄，在C语言中实现的是事件集控制块的指针。</p>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">rt_event</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="n">rt_ipc_object</span> <span class="n">parent</span><span class="p">;</span>                        <span class="cm">/**&lt; 继承自ipc_object类 */</span>
+
+    <span class="n">rt_uint32_t</span>          <span class="n">set</span><span class="p">;</span>                           <span class="cm">/**&lt; 事件集合，每一位表示1个事件，位的值可以标记某事件是否发生 */</span>
+<span class="p">};</span>
+<span class="c1">//rt_event_t是指向事件结构体的指针类型</span>
+<span class="k">typedef</span> <span class="k">struct</span> <span class="n">rt_event</span> <span class="o">*</span><span class="n">rt_event_t</span><span class="p">;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id8">
+<h4>事件集的管理方式<a class="headerlink" href="#id8" title="永久链接至标题"></a></h4>
+<div class="section" id="id9">
+<h5>创建和删除事件集<a class="headerlink" href="#id9" title="永久链接至标题"></a></h5>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">rt_event_t</span> <span class="nf">rt_event_create</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">,</span> <span class="n">rt_uint8_t</span> <span class="n">flag</span><span class="p">);</span>
+</pre></div>
+</div>
+<table class="colwidths-auto docutils align-default" id="id17">
+<caption><span class="caption-text">rt_event_create输入参数</span><a class="headerlink" href="#id17" title="永久链接至表格"></a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>参数</p></th>
+<th class="head"><p>描述</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>name</p></td>
+<td><p>事件集的名称</p></td>
+</tr>
+<tr class="row-odd"><td><p>flag</p></td>
+<td><p>事件集的标志，取值（RT_EVENT_FLAG_OR，RT_EVENT_FLAG_AND）</p></td>
+</tr>
+</tbody>
+</table>
+<table class="colwidths-auto docutils align-default" id="id18">
+<caption><span class="caption-text">rt_event_create返回值</span><a class="headerlink" href="#id18" title="永久链接至表格"></a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>返回</p></th>
+<th class="head"><p>描述</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>RT_NULL</p></td>
+<td><p>创建失败</p></td>
+</tr>
+<tr class="row-odd"><td><p>事件对象的句柄</p></td>
+<td><p>创建成功</p></td>
+</tr>
+</tbody>
+</table>
+<div class="literal-block-wrapper docutils container" id="id19">
+<div class="code-block-caption"><span class="caption-text">删除事件集</span><a class="headerlink" href="#id19" title="永久链接至代码"></a></div>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">rt_err_t</span> <span class="nf">rt_event_delete</span><span class="p">(</span><span class="n">rt_event_t</span> <span class="n">event</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<div class="admonition important">
+<p class="admonition-title">重要</p>
+<p>在调用rt_event_delete函数删除一个事件集对象时，确保该事件集不再被使用。</p>
+<p>在删除前会唤醒所有挂起在该事件集上的线程（线程的返回值是 -RT_ERROR），然后释放事件集对象占用的内存块。</p>
+</div>
+<p>rt_event_delete函数输入的参数为事件集对象的句柄，返回RT_EOK时代表成功。</p>
+</div>
+<div class="section" id="id10">
+<h5>初始化和脱离事件集<a class="headerlink" href="#id10" title="永久链接至标题"></a></h5>
+<p>静态事件集对象的内存是在系统编译时由编译器分配的，一般放于读写数据段或未初始化数据段中。</p>
+<p>在使用静态事件集对象前，需要先初始化。</p>
+<div class="literal-block-wrapper docutils container" id="id20">
+<div class="code-block-caption"><span class="caption-text">初始化事件集函数</span><a class="headerlink" href="#id20" title="永久链接至代码"></a></div>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">rt_err_t</span> <span class="nf">rt_event_init</span><span class="p">(</span><span class="n">rt_event_t</span> <span class="n">event</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">,</span> <span class="n">rt_uint8_t</span> <span class="n">flag</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+<ul class="simple">
+<li><p>event 事件集对象的句柄</p></li>
+<li><p>name 事件集的名称</p></li>
+<li><p>flag 事件集的标志，取值（RT_IPC_FLAG_FIFO或RT_IPC_FLAG_PRIO）</p></li>
+</ul>
+<p>返回</p>
+<ul class="simple">
+<li><p>RT_EOK 代表成功</p></li>
+</ul>
+<p>不再使用rt_event_init（）初始化的事件集对象时，调用脱离事件集对象控制来释放系统资源。</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">rt_err_t</span> <span class="nf">rt_event_detach</span><span class="p">(</span><span class="n">rt_event_t</span> <span class="n">event</span><span class="p">);</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>event 事件集对象的句柄</p></li>
+</ul>
+<p>返回</p>
+<ul class="simple">
+<li><p>RT_EOK 代表成功</p></li>
+</ul>
+</div>
+<div class="section" id="id11">
+<h5>发送事件<a class="headerlink" href="#id11" title="永久链接至标题"></a></h5>
+<div class="literal-block-wrapper docutils container" id="id21">
+<div class="code-block-caption"><span class="caption-text">发送函数</span><a class="headerlink" href="#id21" title="永久链接至代码"></a></div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>rt_err_t rt_event_send(rt_event_t event, rt_uint32_t set)；
+</pre></div>
+</div>
+</div>
+<p>通过set指定的事件标志设定event事件集对象的事件标志值，然后遍历event事件集对象上的等待线程链表，判断是否有线程的事件激活要求与当前event对象事件
+标志值匹配，如果有，则唤醒该线程。</p>
+<ul class="simple">
+<li><p>event 事件集对象的句柄</p></li>
+<li><p>set 发送的一个或多个事件的标志值</p></li>
+</ul>
+<p>返回</p>
+<ul class="simple">
+<li><p>RT_EOK 代表成功</p></li>
+</ul>
+</div>
+<div class="section" id="id12">
+<h5>接收事件<a class="headerlink" href="#id12" title="永久链接至标题"></a></h5>
+<p>内核使用32位的无符号整数来标识事件集，它的每一位代表一个事件，因此一个事件集对象可同时接收32个事件，内核可以通过指定选择参数“逻辑与”或“逻辑或”来
+选择如何激活线程，使用“逻辑与”参数表示只有当所有等待的事件都发生时才激活线程，而“逻辑或”参数则表示只要有一个等待的事件发生就激活线程。</p>
+<div class="literal-block-wrapper docutils container" id="id22">
+<div class="code-block-caption"><span class="caption-text">接受事件</span><a class="headerlink" href="#id22" title="永久链接至代码"></a></div>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">rt_err_t</span> <span class="n">rt_event_recv</span><span class="p">(</span><span class="n">rt_event_t</span>   <span class="n">event</span><span class="p">,</span>
+                   <span class="n">rt_uint32_t</span>  <span class="n">set</span><span class="p">,</span>
+                   <span class="n">rt_uint8_t</span>   <span class="n">option</span><span class="p">,</span>
+                   <span class="n">rt_int32_t</span>   <span class="n">timeout</span><span class="p">,</span>
+                   <span class="n">rt_uint32_t</span> <span class="o">*</span><span class="n">recved</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>当调用此接口时，先根据set和option来判断要接收的事件是否发生。</p>
+<p>如果已经发生，则根据参数opti上是否有RT_EVENT_FLAG_CLEAR来决定是否重置事件的相应标志位，然后返回。</p>
+<p>如果没有发生，则把等待的set和option参数填入线程本身的结构中，然后把线程挂起在此事件上，知道其等待的事件
+满足条件或等待事件超过指定的超时时间。</p>
+<p>若超时时间设置为零，则表示当线程接收的事件没有满足条件时，就不等待，返回-RT_ETIMEOUT</p>
+<p>参数的描述</p>
+<ul class="simple">
+<li><p>event 事件集对象的句柄</p></li>
+<li><p>set 接收线程感兴趣的事件</p></li>
+<li><p>option 接收选项</p></li>
+<li><p>timeout 指定超时时间</p></li>
+<li><p>recved 指向接收到的事件</p></li>
+</ul>
+<p>返回</p>
+<ul class="simple">
+<li><p>RT_EOK 成功</p></li>
+<li><p>-RT_ETIMEOUT 超时</p></li>
+<li><p>-RT_ERROR 错误</p></li>
+</ul>
+<div class="literal-block-wrapper docutils container" id="id23">
+<div class="code-block-caption"><span class="caption-text">事件集的使用例程</span><a class="headerlink" href="#id23" title="永久链接至代码"></a></div>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define THREAD_PRIOITY      9</span>
+<span class="cp">#define THREAD_TIMESLICE    5</span>
+
+<span class="cp">#define EVENT_FLAG3     (1 &lt;&lt; 3)</span>
+<span class="cp">#define EVENT_FLAG5     (1 &lt;&lt; 5)</span>
+
+<span class="k">static</span> <span class="k">struct</span> <span class="n">rt_event</span> <span class="n">event</span><span class="p">;</span>
+
+<span class="n">ALIGN</span><span class="p">(</span><span class="n">RT_ALIGN_SIZE</span><span class="p">)</span>
+<span class="k">static</span> <span class="kt">char</span> <span class="n">thread1_stack</span><span class="p">[</span><span class="mi">1024</span><span class="p">];</span>
+<span class="k">static</span> <span class="k">struct</span> <span class="n">rt_thread</span> <span class="n">thread1</span><span class="p">;</span>
+
+<span class="k">static</span> <span class="kt">void</span> <span class="nf">thread1_recv_event</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">spram</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">rt_uint32_t</span> <span class="n">e</span><span class="p">;</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="n">rt_event_recv</span><span class="p">(</span><span class="o">&amp;</span><span class="n">event</span><span class="p">,</span> <span class="p">(</span><span class="n">EVENT_FLAG3</span><span class="o">|</span><span class="n">EVENT_FLAG5</span><span class="p">),</span>
+            <span class="n">RT_EVENT_FLAG_OR</span><span class="o">|</span><span class="n">RT_EVENT_FLAG_CLEAR</span><span class="p">,</span> <span class="n">RT_WAITING_FOREVER</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">e</span><span class="p">)</span> <span class="o">==</span> <span class="n">RT_EOK</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;thread1: OR recy event 0x%x</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;thread1: delay ls to prepare the second event</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+
+    <span class="n">rt_thread_delay</span><span class="p">(</span><span class="mi">1000</span><span class="p">);</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="n">rt_event_recv</span><span class="p">(</span><span class="o">&amp;</span><span class="n">event</span><span class="p">,</span> <span class="p">(</span><span class="n">EVENT_FLAG3</span><span class="o">|</span><span class="n">EVENT_FLAG5</span><span class="p">),</span>
+            <span class="n">RT_EVENT_FLAG_AND</span><span class="o">|</span><span class="n">RT_EVENT_FLAG_CLEAR</span><span class="p">,</span> <span class="n">RT_WAITING_FOREVER</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">e</span><span class="p">)</span> <span class="o">==</span> <span class="n">RT_EOK</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;thread1：AND recy event 0x%x</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;thread1 leave.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="n">ALIGN</span><span class="p">(</span><span class="n">RT_ALIGN_SIZE</span><span class="p">)</span>
+<span class="k">static</span> <span class="kt">char</span> <span class="n">thread2_stack</span><span class="p">[</span><span class="mi">1024</span><span class="p">];</span>
+<span class="k">static</span> <span class="k">struct</span> <span class="n">rt_thread</span> <span class="n">thread2</span><span class="p">;</span>
+
+<span class="k">static</span> <span class="kt">void</span> <span class="nf">thread2_send_event</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">param</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;thread2: send event3</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+    <span class="n">rt_event_send</span><span class="p">(</span><span class="o">&amp;</span><span class="n">event</span><span class="p">,</span> <span class="n">EVENT_FLAG3</span><span class="p">);</span>
+    <span class="n">rt_thread_mdelay</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+
+    <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;thrad2: send event5</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+    <span class="n">rt_event_send</span><span class="p">(</span><span class="o">&amp;</span><span class="n">event</span><span class="p">,</span> <span class="n">EVENT_FLAG5</span><span class="p">);</span>
+    <span class="n">rt_thread_mdelay</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+
+    <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;thread2: send event3</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+    <span class="n">rt_event_send</span><span class="p">(</span><span class="o">&amp;</span><span class="n">event</span><span class="p">,</span> <span class="n">EVENT_FLAG3</span><span class="p">);</span>
+    <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;thread2 leave</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">event_sample</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">rt_err_t</span> <span class="n">result</span><span class="p">;</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">rt_event_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">event</span><span class="p">,</span> <span class="s">&quot;event&quot;</span><span class="p">,</span> <span class="n">RT_IPC_FLAG_FIFO</span><span class="p">);</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="n">result</span> <span class="o">!=</span> <span class="n">RT_EOK</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;init event failed</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="n">rt_thread_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">thread1</span><span class="p">,</span>
+            <span class="s">&quot;thread1&quot;</span><span class="p">,</span>
+            <span class="n">thread1_recv_event</span><span class="p">,</span>
+            <span class="n">RT_NULL</span><span class="p">,</span>
+            <span class="o">&amp;</span><span class="n">thread1_stack</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="k">sizeof</span><span class="p">(</span><span class="n">thread1_stack</span><span class="p">),</span>
+            <span class="n">THREAD_PRIOITY</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="n">THREAD_TIMESLICE</span><span class="p">);</span>
+    <span class="n">rt_thread_startup</span><span class="p">(</span><span class="o">&amp;</span><span class="n">thread1</span><span class="p">);</span>
+
+    <span class="n">rt_thread_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">thread2</span><span class="p">,</span>
+            <span class="s">&quot;thread2&quot;</span><span class="p">,</span>
+            <span class="n">thread2_send_event</span><span class="p">,</span>
+            <span class="n">RT_NULL</span><span class="p">,</span>
+            <span class="o">&amp;</span><span class="n">thread2_stack</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="k">sizeof</span><span class="p">(</span><span class="n">thread2_stack</span><span class="p">),</span>
+            <span class="n">THREAD_PRIOITY</span><span class="p">,</span>
+            <span class="n">THREAD_TIMESLICE</span><span class="p">);</span>
+    <span class="n">rt_thread_startup</span><span class="p">(</span><span class="o">&amp;</span><span class="n">thread2</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="timer.html" class="btn btn-neutral float-left" title="时钟管理" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> 上一页</a>
+        <a href="../Fast_DDS/Fast_DDS_1.html" class="btn btn-neutral float-right" title="Fast-DDS" accesskey="n" rel="next">下一页 <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; 版权所有 xdt,海南大学.</p>
+  </div>
+
+  利用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 构建，使用了 
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">主题</a>
+    由 <a href="https://readthedocs.org">Read the Docs</a>开发.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
