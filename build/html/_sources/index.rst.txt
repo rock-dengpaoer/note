@@ -23,6 +23,7 @@ Welcome to linux学习笔记's documentation!
    rt_thread/thread
    rt_thread/timer
    rt_thread/Synchronize
+   rt_thread/Communication
 
 .. toctree::
    :maxdepth: 2

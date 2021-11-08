@@ -18,7 +18,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="索引" href="../genindex.html" />
     <link rel="search" title="搜索" href="../search.html" />
-    <link rel="next" title="Fast-DDS" href="../Fast_DDS/Fast_DDS_1.html" />
+    <link rel="next" title="线程间通信" href="Communication.html" />
     <link rel="prev" title="时钟管理" href="timer.html" /> 
 </head>
 
@@ -59,8 +59,10 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#id13">本章小结</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="Communication.html">线程间通信</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">DDS:</span></p>
 <ul>
@@ -109,8 +111,8 @@
 <h1>线程间同步<a class="headerlink" href="#id1" title="永久链接至标题"></a></h1>
 <div class="section" id="id2">
 <h2>信号量<a class="headerlink" href="#id2" title="永久链接至标题"></a></h2>
-<div class="literal-block-wrapper docutils container" id="id13">
-<div class="code-block-caption"><span class="caption-text">信号量的使用</span><a class="headerlink" href="#id13" title="永久链接至代码"></a></div>
+<div class="literal-block-wrapper docutils container" id="id14">
+<div class="code-block-caption"><span class="caption-text">信号量的使用</span><a class="headerlink" href="#id14" title="永久链接至代码"></a></div>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span> <span class="cp">#define THREAD_PRIORITY     25</span>
  <span class="cp">#define THREAD_TIMESLICE    5</span>
 
@@ -206,8 +208,8 @@
 </pre></div>
 </div>
 </div>
-<div class="literal-block-wrapper docutils container" id="id14">
-<div class="code-block-caption"><span class="caption-text">生产者消费者例程</span><a class="headerlink" href="#id14" title="永久链接至代码"></a></div>
+<div class="literal-block-wrapper docutils container" id="id15">
+<div class="code-block-caption"><span class="caption-text">生产者消费者例程</span><a class="headerlink" href="#id15" title="永久链接至代码"></a></div>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span> <span class="cp">#define THREAD_PRIORITY     6</span>
  <span class="cp">#define THREAD_STACK_SIZE   512</span>
  <span class="cp">#define THREAD_TIMESLICE    5</span>
@@ -342,8 +344,8 @@
 </pre></div>
 </div>
 </div></blockquote>
-<div class="literal-block-wrapper docutils container" id="id15">
-<div class="code-block-caption"><span class="caption-text">互斥量例程</span><a class="headerlink" href="#id15" title="永久链接至代码"></a></div>
+<div class="literal-block-wrapper docutils container" id="id16">
+<div class="code-block-caption"><span class="caption-text">互斥量例程</span><a class="headerlink" href="#id16" title="永久链接至代码"></a></div>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span> <span class="cp">#define THREAD_PRIORITY     8</span>
  <span class="cp">#define THREAD_TIMESLICE    5</span>
 
@@ -438,8 +440,8 @@
 <p>在RT-Thread操作系统中，互斥量可以解决优先级翻转问题，使用优先级继承算法实现。优先级继承是通过在线程A尝试获取共享资源而被挂起的期间内，将线程C的优先级提升到线程A的优先级别，从而解决优先级翻转引起的问题。</p>
 <p>优先级继承是指，提高某个占有某种资源的低优先级线程的优先级，使之与所有等待该资源的线程中优先级最高的那个线程的优先级相等，然后执行，而当这个低优先级线程释放该资源时，优先级重新回到初始设定。</p>
 <p>这个例子创建3个动态线程以检查只有互斥量时，持有的线程优先级是否被调整到等待线程优先级中的最高级</p>
-<div class="literal-block-wrapper docutils container" id="id16">
-<div class="code-block-caption"><span class="caption-text">防止优先级翻转例程</span><a class="headerlink" href="#id16" title="永久链接至代码"></a></div>
+<div class="literal-block-wrapper docutils container" id="id17">
+<div class="code-block-caption"><span class="caption-text">防止优先级翻转例程</span><a class="headerlink" href="#id17" title="永久链接至代码"></a></div>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span> <span class="c1">//指向线程控制块的指针</span>
  <span class="k">static</span> <span class="n">rt_thread_t</span> <span class="n">tid1</span> <span class="o">=</span> <span class="n">RT_NULL</span><span class="p">;</span>
  <span class="k">static</span> <span class="n">rt_thread_t</span> <span class="n">tid2</span> <span class="o">=</span> <span class="n">RT_NULL</span><span class="p">;</span>
@@ -613,8 +615,8 @@
 <div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">rt_event_t</span> <span class="nf">rt_event_create</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">,</span> <span class="n">rt_uint8_t</span> <span class="n">flag</span><span class="p">);</span>
 </pre></div>
 </div>
-<table class="colwidths-auto docutils align-default" id="id17">
-<caption><span class="caption-text">rt_event_create输入参数</span><a class="headerlink" href="#id17" title="永久链接至表格"></a></caption>
+<table class="colwidths-auto docutils align-default" id="id18">
+<caption><span class="caption-text">rt_event_create输入参数</span><a class="headerlink" href="#id18" title="永久链接至表格"></a></caption>
 <thead>
 <tr class="row-odd"><th class="head"><p>参数</p></th>
 <th class="head"><p>描述</p></th>
@@ -629,8 +631,8 @@
 </tr>
 </tbody>
 </table>
-<table class="colwidths-auto docutils align-default" id="id18">
-<caption><span class="caption-text">rt_event_create返回值</span><a class="headerlink" href="#id18" title="永久链接至表格"></a></caption>
+<table class="colwidths-auto docutils align-default" id="id19">
+<caption><span class="caption-text">rt_event_create返回值</span><a class="headerlink" href="#id19" title="永久链接至表格"></a></caption>
 <thead>
 <tr class="row-odd"><th class="head"><p>返回</p></th>
 <th class="head"><p>描述</p></th>
@@ -645,8 +647,8 @@
 </tr>
 </tbody>
 </table>
-<div class="literal-block-wrapper docutils container" id="id19">
-<div class="code-block-caption"><span class="caption-text">删除事件集</span><a class="headerlink" href="#id19" title="永久链接至代码"></a></div>
+<div class="literal-block-wrapper docutils container" id="id20">
+<div class="code-block-caption"><span class="caption-text">删除事件集</span><a class="headerlink" href="#id20" title="永久链接至代码"></a></div>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">rt_err_t</span> <span class="nf">rt_event_delete</span><span class="p">(</span><span class="n">rt_event_t</span> <span class="n">event</span><span class="p">);</span>
 </pre></div>
 </div>
@@ -662,8 +664,8 @@
 <h5>初始化和脱离事件集<a class="headerlink" href="#id10" title="永久链接至标题"></a></h5>
 <p>静态事件集对象的内存是在系统编译时由编译器分配的，一般放于读写数据段或未初始化数据段中。</p>
 <p>在使用静态事件集对象前，需要先初始化。</p>
-<div class="literal-block-wrapper docutils container" id="id20">
-<div class="code-block-caption"><span class="caption-text">初始化事件集函数</span><a class="headerlink" href="#id20" title="永久链接至代码"></a></div>
+<div class="literal-block-wrapper docutils container" id="id21">
+<div class="code-block-caption"><span class="caption-text">初始化事件集函数</span><a class="headerlink" href="#id21" title="永久链接至代码"></a></div>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">rt_err_t</span> <span class="nf">rt_event_init</span><span class="p">(</span><span class="n">rt_event_t</span> <span class="n">event</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">,</span> <span class="n">rt_uint8_t</span> <span class="n">flag</span><span class="p">);</span>
 </pre></div>
 </div>
@@ -691,8 +693,8 @@
 </div>
 <div class="section" id="id11">
 <h5>发送事件<a class="headerlink" href="#id11" title="永久链接至标题"></a></h5>
-<div class="literal-block-wrapper docutils container" id="id21">
-<div class="code-block-caption"><span class="caption-text">发送函数</span><a class="headerlink" href="#id21" title="永久链接至代码"></a></div>
+<div class="literal-block-wrapper docutils container" id="id22">
+<div class="code-block-caption"><span class="caption-text">发送函数</span><a class="headerlink" href="#id22" title="永久链接至代码"></a></div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>rt_err_t rt_event_send(rt_event_t event, rt_uint32_t set)；
 </pre></div>
 </div>
@@ -712,8 +714,8 @@
 <h5>接收事件<a class="headerlink" href="#id12" title="永久链接至标题"></a></h5>
 <p>内核使用32位的无符号整数来标识事件集，它的每一位代表一个事件，因此一个事件集对象可同时接收32个事件，内核可以通过指定选择参数“逻辑与”或“逻辑或”来
 选择如何激活线程，使用“逻辑与”参数表示只有当所有等待的事件都发生时才激活线程，而“逻辑或”参数则表示只要有一个等待的事件发生就激活线程。</p>
-<div class="literal-block-wrapper docutils container" id="id22">
-<div class="code-block-caption"><span class="caption-text">接受事件</span><a class="headerlink" href="#id22" title="永久链接至代码"></a></div>
+<div class="literal-block-wrapper docutils container" id="id23">
+<div class="code-block-caption"><span class="caption-text">接受事件</span><a class="headerlink" href="#id23" title="永久链接至代码"></a></div>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">rt_err_t</span> <span class="n">rt_event_recv</span><span class="p">(</span><span class="n">rt_event_t</span>   <span class="n">event</span><span class="p">,</span>
                    <span class="n">rt_uint32_t</span>  <span class="n">set</span><span class="p">,</span>
                    <span class="n">rt_uint8_t</span>   <span class="n">option</span><span class="p">,</span>
@@ -741,8 +743,8 @@
 <li><p>-RT_ETIMEOUT 超时</p></li>
 <li><p>-RT_ERROR 错误</p></li>
 </ul>
-<div class="literal-block-wrapper docutils container" id="id23">
-<div class="code-block-caption"><span class="caption-text">事件集的使用例程</span><a class="headerlink" href="#id23" title="永久链接至代码"></a></div>
+<div class="literal-block-wrapper docutils container" id="id24">
+<div class="code-block-caption"><span class="caption-text">事件集的使用例程</span><a class="headerlink" href="#id24" title="永久链接至代码"></a></div>
 <div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="cp">#define THREAD_PRIOITY      9</span>
 <span class="cp">#define THREAD_TIMESLICE    5</span>
 
@@ -835,9 +837,21 @@
 </pre></div>
 </div>
 </div>
+<p>事件集可用于多种场合，它能够在一定程度上代替信号量，用于线程间同步。</p>
+<p>一个线程或中断服务例程发送一个事件给事件集对象，而后等待的线程被唤醒并对应的事件进行处理。</p>
+<p>事件集中， 事件的发送操作是在事件为清除前是不可累计的，而信号量的释放动作是累计的。</p>
+<p>事件的另一个特性是，接收线程可等待多种事件，即多个事件对应一个线程或多个线程。</p>
 </div>
 </div>
 </div>
+</div>
+<div class="section" id="id13">
+<h2>本章小结<a class="headerlink" href="#id13" title="永久链接至标题"></a></h2>
+<ol class="arabic simple">
+<li><p>信号量可以在中断中释放，但不能在中断服务中获取。</p></li>
+<li><p>在获取互斥量后，请尽快释放互斥量，并且在持有互斥量的过程中，不得更改持有互斥量线程的优先级。</p></li>
+<li><p>互斥量不能在中断服务例程中使用。</p></li>
+</ol>
 </div>
 </div>
 
@@ -846,7 +860,7 @@
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="timer.html" class="btn btn-neutral float-left" title="时钟管理" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> 上一页</a>
-        <a href="../Fast_DDS/Fast_DDS_1.html" class="btn btn-neutral float-right" title="Fast-DDS" accesskey="n" rel="next">下一页 <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="Communication.html" class="btn btn-neutral float-right" title="线程间通信" accesskey="n" rel="next">下一页 <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

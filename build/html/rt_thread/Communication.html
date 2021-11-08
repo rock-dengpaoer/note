@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="zh-CN" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>线程间通信 &mdash; linux学习笔记  文档</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/translations.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="索引" href="../genindex.html" />
+    <link rel="search" title="搜索" href="../search.html" />
+    <link rel="next" title="Fast-DDS" href="../Fast_DDS/Fast_DDS_1.html" />
+    <link rel="prev" title="线程间同步" href="Synchronize.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> linux学习笔记
+            <img src="../_static/logo.jpg" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="在文档中搜索" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Linux:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Linux/app_1.html">软件运行分析</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Linux/app_2.html">软件安装</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">rt_thread内核:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="thread.html">线程</a></li>
+<li class="toctree-l1"><a class="reference internal" href="timer.html">时钟管理</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Synchronize.html">线程间同步</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">线程间通信</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id2">邮箱</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id3">邮箱的工作机制</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id4">邮箱控制块</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id5">邮箱的管理方式</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id6">创建和删除邮箱</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id7">初始化和脱离邮箱</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id8">发送邮件</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id9">等待方式发送邮件</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id10">接收邮件</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id11">邮箱的使用场合</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#id12">消息队列</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id13">消息队列的工作机制</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id14">消息队列控制块</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id15">消息队列的管理方式</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id16">创建和删除消息队列</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id17">初始化消息队列</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id18">脱离消息队列</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id19">发送信息</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id20">发送紧急信息</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id21">接收消息</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">DDS:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Fast_DDS/Fast_DDS_1.html">Fast-DDS</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">网站搭建:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../web/web_1.html">内网网站搭建</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">杂项:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Other/Sphinx_Tutorials.html">sphinx安装与使用</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Other/Sphinx_Tutorials.html#id14">sphinx简明教程</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../Other/Sphinx_Tutorials.html#id15">sphinx使用时需要注意的问题</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">周报</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../Data/Data_weekly.html">2021-10</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">linux学习笔记</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>线程间通信</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/rt_thread/Communication.rst.txt" rel="nofollow"> 查看页面源码</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="section" id="id1">
+<h1>线程间通信<a class="headerlink" href="#id1" title="永久链接至标题"></a></h1>
+<p>在裸机编程中，经常会使用全局变量进行功能间的通信，如某些功能可能由于一些操作而改变全局变量的值，
+另一个功能对此全局变量进行读取，根据读取到的全局变量值执行相应的动作，达到通信协作的目的。</p>
+<div class="section" id="id2">
+<h2>邮箱<a class="headerlink" href="#id2" title="永久链接至标题"></a></h2>
+<p>邮箱服务是实时操作系统中一种典型的线程间通信方法。</p>
+<div class="section" id="id3">
+<h3>邮箱的工作机制<a class="headerlink" href="#id3" title="永久链接至标题"></a></h3>
+<p>邮箱中的每一封邮件只能容纳固定的4字节内容（针对32位处理系统，指针的大小即位4个字节，所以
+一封邮件恰好能够容纳一个指针）。</p>
+<p>典型的邮箱也称作交换信息，线程或中断服务例程把一封4字节长度的邮件发送到邮箱中，而一个或多个线程
+可以从邮箱中接收这些邮件并进行处理。</p>
+<p>非堵塞方式的邮件发送过程能够安全地应用于中断服务中，是线程、中断服务、定时器向线程发送消息的
+有效手段。</p>
+<p>通常来说，邮件收取过程可能是堵塞的，这取决于邮箱中是否有邮件，以及收取邮件时设置的超时时间。当
+邮箱中不存在邮件且超时时间不为0时，邮件收取过程将变成堵塞方式， <strong>在这类情况</strong> 下，只能由线程
+进行邮件的收取。</p>
+<p>当一个线程向邮箱发送邮件时，如果邮箱没满，将把邮件复制到邮箱中。如果邮箱已经满了，发送线程可以设置
+超时时间，选择挂起等待或直接返回-RT_EFULL。如果发送线程选择挂起等待，那么当邮箱中的邮件被收取而
+空出空间来时，等待挂起的发送线程将被唤醒继续发送。</p>
+<p>当一个线程从邮箱中接收邮件时，如果邮箱是空的，接收线程可以选择是否等待挂起直到收到新的邮件而唤醒，
+或可以设置超时时间。当达到设置的超时时间，邮箱依然未收到邮件时，这个选择超时等待的线程将被唤醒并
+返回-RT_ETIMEOUT。如果邮箱中存在邮件，那么接收线程将复制邮箱中的4个字节邮件到接收缓存中。</p>
+</div>
+<div class="section" id="id4">
+<h3>邮箱控制块<a class="headerlink" href="#id4" title="永久链接至标题"></a></h3>
+<p>邮箱控制块是操作系统用于管理优先的一个数据结构，由结构体struct_mailbox表示，另一种C表达方式rt_mailbox_t，
+表示的是邮箱的句柄，在C语言中的实现是邮箱控制块的指针。</p>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span>    <span class="k">struct</span> <span class="n">rt_mailbox</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="n">rt_ipc_object</span> <span class="n">parent</span><span class="p">;</span>                        <span class="cm">/**&lt; inherit from ipc_object */</span>
+
+    <span class="n">rt_ubase_t</span>          <span class="o">*</span><span class="n">msg_pool</span><span class="p">;</span>                      <span class="cm">/**&lt; 邮箱缓冲区的开始地址 */</span>
+
+    <span class="n">rt_uint16_t</span>          <span class="n">size</span><span class="p">;</span>                          <span class="cm">/**&lt;邮箱缓冲区的大小 */</span>
+
+    <span class="n">rt_uint16_t</span>          <span class="n">entry</span><span class="p">;</span>                         <span class="cm">/**&lt; 邮箱中邮件的数目*/</span>
+    <span class="n">rt_uint16_t</span>          <span class="n">in_offset</span><span class="p">;</span>                     <span class="cm">/**&lt; 邮箱缓冲的进指针 */</span>
+    <span class="n">rt_uint16_t</span>          <span class="n">out_offset</span><span class="p">;</span>                    <span class="cm">/**&lt; 邮箱缓冲的出指针 */</span>
+
+    <span class="n">rt_list_t</span>            <span class="n">suspend_sender_thread</span><span class="p">;</span>         <span class="cm">/**&lt; 发送线程的挂起等待队列 */</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="id5">
+<h3>邮箱的管理方式<a class="headerlink" href="#id5" title="永久链接至标题"></a></h3>
+<p>邮箱控制块是一个结构体，其中含有事件相关的重要参数，在邮箱的功能实现中起着重要的作用。</p>
+<div class="section" id="id6">
+<h4>创建和删除邮箱<a class="headerlink" href="#id6" title="永久链接至标题"></a></h4>
+<div class="literal-block-wrapper docutils container" id="id22">
+<div class="code-block-caption"><span class="caption-text">动态创建邮箱对象</span><a class="headerlink" href="#id22" title="永久链接至代码"></a></div>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span>    <span class="n">rt_mailbox_t</span> <span class="nf">rt_mb_create</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">,</span> <span class="n">rt_size_t</span> <span class="n">size</span><span class="p">,</span> <span class="n">rt_uint8_t</span> <span class="n">flag</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">rt_mailbox_t</span> <span class="n">mb</span><span class="p">;</span>
+
+    <span class="n">RT_DEBUG_NOT_IN_INTERRUPT</span><span class="p">;</span>
+
+    <span class="cm">/* allocate object */</span>
+    <span class="n">mb</span> <span class="o">=</span> <span class="p">(</span><span class="n">rt_mailbox_t</span><span class="p">)</span><span class="n">rt_object_allocate</span><span class="p">(</span><span class="n">RT_Object_Class_MailBox</span><span class="p">,</span> <span class="n">name</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">mb</span> <span class="o">==</span> <span class="n">RT_NULL</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">mb</span><span class="p">;</span>
+
+    <span class="cm">/* set parent */</span>
+    <span class="n">mb</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">parent</span><span class="p">.</span><span class="n">flag</span> <span class="o">=</span> <span class="n">flag</span><span class="p">;</span>
+
+    <span class="cm">/* initialize ipc object */</span>
+    <span class="n">rt_ipc_object_init</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">));</span>
+
+    <span class="cm">/* initialize mailbox */</span>
+    <span class="n">mb</span><span class="o">-&gt;</span><span class="n">size</span>     <span class="o">=</span> <span class="n">size</span><span class="p">;</span>
+    <span class="n">mb</span><span class="o">-&gt;</span><span class="n">msg_pool</span> <span class="o">=</span> <span class="p">(</span><span class="n">rt_ubase_t</span> <span class="o">*</span><span class="p">)</span><span class="n">RT_KERNEL_MALLOC</span><span class="p">(</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">size</span> <span class="o">*</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">rt_ubase_t</span><span class="p">));</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">msg_pool</span> <span class="o">==</span> <span class="n">RT_NULL</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="cm">/* delete mailbox object */</span>
+        <span class="n">rt_object_delete</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">parent</span><span class="p">));</span>
+
+        <span class="k">return</span> <span class="n">RT_NULL</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="n">mb</span><span class="o">-&gt;</span><span class="n">entry</span>      <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="n">mb</span><span class="o">-&gt;</span><span class="n">in_offset</span>  <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="n">mb</span><span class="o">-&gt;</span><span class="n">out_offset</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+    <span class="cm">/* initialize an additional list of sender suspend thread */</span>
+    <span class="n">rt_list_init</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">suspend_sender_thread</span><span class="p">));</span>
+
+    <span class="k">return</span> <span class="n">mb</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<p>创建优先对象时会先从对象管理器中分配一个邮箱对象，然后给邮箱动态分配一块内存空间用来存放邮件，这块内存的大小等于邮件大小（4字节）与邮箱容量的乘积，
+接着初始化接收邮件数目和发送邮件在邮箱中的偏移量。</p>
+<p>输入参数：</p>
+<ul class="simple">
+<li><p>name 邮件名称</p></li>
+<li><p>size 邮箱容量</p></li>
+<li><p>flag 邮箱标志，它可以取RT_IPC_FLAG_FIFO或RT_IPC_FLAG_PRIO</p></li>
+</ul>
+<p>返回值</p>
+<ul class="simple">
+<li><p>RT_NULL 创建失败</p></li>
+<li><p>邮箱对象的句柄  创建成功</p></li>
+</ul>
+<div class="literal-block-wrapper docutils container" id="id23">
+<div class="code-block-caption"><span class="caption-text">删除邮箱</span><a class="headerlink" href="#id23" title="永久链接至代码"></a></div>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span>    <span class="n">rt_err_t</span> <span class="nf">rt_mb_delete</span><span class="p">(</span><span class="n">rt_mailbox_t</span> <span class="n">mb</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">RT_DEBUG_NOT_IN_INTERRUPT</span><span class="p">;</span>
+
+    <span class="cm">/* parameter check */</span>
+    <span class="n">RT_ASSERT</span><span class="p">(</span><span class="n">mb</span> <span class="o">!=</span> <span class="n">RT_NULL</span><span class="p">);</span>
+    <span class="n">RT_ASSERT</span><span class="p">(</span><span class="n">rt_object_get_type</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">parent</span><span class="p">)</span> <span class="o">==</span> <span class="n">RT_Object_Class_MailBox</span><span class="p">);</span>
+    <span class="n">RT_ASSERT</span><span class="p">(</span><span class="n">rt_object_is_systemobject</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">parent</span><span class="p">)</span> <span class="o">==</span> <span class="n">RT_FALSE</span><span class="p">);</span>
+
+    <span class="cm">/* resume all suspended thread */</span>
+    <span class="n">rt_ipc_list_resume_all</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">suspend_thread</span><span class="p">));</span>
+
+    <span class="cm">/* also resume all mailbox private suspended thread */</span>
+    <span class="n">rt_ipc_list_resume_all</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">suspend_sender_thread</span><span class="p">));</span>
+
+    <span class="cm">/* free mailbox pool */</span>
+    <span class="n">RT_KERNEL_FREE</span><span class="p">(</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">msg_pool</span><span class="p">);</span>
+
+    <span class="cm">/* delete mailbox object */</span>
+    <span class="n">rt_object_delete</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">parent</span><span class="p">));</span>
+
+    <span class="k">return</span> <span class="n">RT_EOK</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<p>删除邮箱时，如果有线程被挂起在该邮箱对象上，内核先唤醒挂起在该邮箱上的所有线程（线程返回值是-RT_ERROR），然后再释放邮箱使用的内存，
+最后删除邮箱对象。</p>
+<p>参数的描述</p>
+<ul class="simple">
+<li><p>mb 邮箱对象的句柄</p></li>
+</ul>
+<p>返回值</p>
+<ul class="simple">
+<li><p>RT_EOK 成功</p></li>
+</ul>
+</div>
+<div class="section" id="id7">
+<h4>初始化和脱离邮箱<a class="headerlink" href="#id7" title="永久链接至标题"></a></h4>
+<p>初始化邮箱用于静态邮箱对象的初始化。</p>
+<p>静态邮箱对象的内存是在系统编译时由编译器分配的，一般放于读写数据段或未初始化数据段中，其余的初始化工作与创建邮箱时相同。</p>
+<div class="literal-block-wrapper docutils container" id="id24">
+<div class="code-block-caption"><span class="caption-text">初始化邮箱</span><a class="headerlink" href="#id24" title="永久链接至代码"></a></div>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span>    <span class="n">rt_err_t</span> <span class="nf">rt_mb_init</span><span class="p">(</span><span class="n">rt_mailbox_t</span> <span class="n">mb</span><span class="p">,</span>
+                    <span class="k">const</span> <span class="kt">char</span>  <span class="o">*</span><span class="n">name</span><span class="p">,</span>
+                    <span class="kt">void</span>        <span class="o">*</span><span class="n">msgpool</span><span class="p">,</span>
+                    <span class="n">rt_size_t</span>    <span class="n">size</span><span class="p">,</span>
+                    <span class="n">rt_uint8_t</span>   <span class="n">flag</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">RT_ASSERT</span><span class="p">(</span><span class="n">mb</span> <span class="o">!=</span> <span class="n">RT_NULL</span><span class="p">);</span>
+
+    <span class="cm">/* initialize object */</span>
+    <span class="n">rt_object_init</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">parent</span><span class="p">),</span> <span class="n">RT_Object_Class_MailBox</span><span class="p">,</span> <span class="n">name</span><span class="p">);</span>
+
+    <span class="cm">/* set parent flag */</span>
+    <span class="n">mb</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">parent</span><span class="p">.</span><span class="n">flag</span> <span class="o">=</span> <span class="n">flag</span><span class="p">;</span>
+
+    <span class="cm">/* initialize ipc object */</span>
+    <span class="n">rt_ipc_object_init</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">));</span>
+
+    <span class="cm">/* initialize mailbox */</span>
+    <span class="n">mb</span><span class="o">-&gt;</span><span class="n">msg_pool</span>   <span class="o">=</span> <span class="p">(</span><span class="n">rt_ubase_t</span> <span class="o">*</span><span class="p">)</span><span class="n">msgpool</span><span class="p">;</span>
+    <span class="n">mb</span><span class="o">-&gt;</span><span class="n">size</span>       <span class="o">=</span> <span class="n">size</span><span class="p">;</span>
+    <span class="n">mb</span><span class="o">-&gt;</span><span class="n">entry</span>      <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="n">mb</span><span class="o">-&gt;</span><span class="n">in_offset</span>  <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="n">mb</span><span class="o">-&gt;</span><span class="n">out_offset</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+    <span class="cm">/* initialize an additional list of sender suspend thread */</span>
+    <span class="n">rt_list_init</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">suspend_sender_thread</span><span class="p">));</span>
+
+    <span class="k">return</span> <span class="n">RT_EOK</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<p>输入参数：</p>
+<ul class="simple">
+<li><p>mb 邮箱对象的句柄</p></li>
+<li><p>name 邮箱名称</p></li>
+<li><p>msgpool 缓冲区指针</p></li>
+<li><p>size 邮箱容量</p></li>
+<li><p>flag 邮箱标志，它可以取RT_IPC_FLAG_FIFO或RT_IPC_FLAG_PRIO</p></li>
+</ul>
+<p>返回值：</p>
+<ul class="simple">
+<li><p>RT_EOK 成功</p></li>
+</ul>
+<p>如果msgpool指向的缓冲区的字节数是N，那么邮箱的容量应该是N/4</p>
+<div class="literal-block-wrapper docutils container" id="id25">
+<div class="code-block-caption"><span class="caption-text">脱离邮箱</span><a class="headerlink" href="#id25" title="永久链接至代码"></a></div>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span>    <span class="n">rt_err_t</span> <span class="nf">rt_mb_detach</span><span class="p">(</span><span class="n">rt_mailbox_t</span> <span class="n">mb</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="cm">/* parameter check */</span>
+    <span class="n">RT_ASSERT</span><span class="p">(</span><span class="n">mb</span> <span class="o">!=</span> <span class="n">RT_NULL</span><span class="p">);</span>
+    <span class="n">RT_ASSERT</span><span class="p">(</span><span class="n">rt_object_get_type</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">parent</span><span class="p">)</span> <span class="o">==</span> <span class="n">RT_Object_Class_MailBox</span><span class="p">);</span>
+    <span class="n">RT_ASSERT</span><span class="p">(</span><span class="n">rt_object_is_systemobject</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">parent</span><span class="p">));</span>
+
+    <span class="cm">/* resume all suspended thread */</span>
+    <span class="n">rt_ipc_list_resume_all</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">suspend_thread</span><span class="p">));</span>
+    <span class="cm">/* also resume all mailbox private suspended thread */</span>
+    <span class="n">rt_ipc_list_resume_all</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">suspend_sender_thread</span><span class="p">));</span>
+
+    <span class="cm">/* detach mailbox object */</span>
+    <span class="n">rt_object_detach</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">parent</span><span class="p">));</span>
+
+    <span class="k">return</span> <span class="n">RT_EOK</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<p>使用该函数接口后，内核先唤醒所有挂在该邮箱上的线程（线程返回值是-RT_ERROR），然后将邮箱对象从内核对象管理器中脱离。</p>
+<p>参数的描述：</p>
+<ul class="simple">
+<li><p>mb 邮箱对象的句柄</p></li>
+</ul>
+<p>返回值</p>
+<p>-RT_EOK 成功</p>
+</div>
+<div class="section" id="id8">
+<h4>发送邮件<a class="headerlink" href="#id8" title="永久链接至标题"></a></h4>
+<p>线程或者中断服务程序可以通过邮箱给其他线程发送邮件。</p>
+<div class="literal-block-wrapper docutils container" id="id26">
+<div class="code-block-caption"><span class="caption-text">发送邮件函数</span><a class="headerlink" href="#id26" title="永久链接至代码"></a></div>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span>    <span class="n">rt_err_t</span> <span class="nf">rt_mb_send</span><span class="p">(</span><span class="n">rt_mailbox_t</span> <span class="n">mb</span><span class="p">,</span> <span class="n">rt_ubase_t</span> <span class="n">value</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">return</span> <span class="n">rt_mb_send_wait</span><span class="p">(</span><span class="n">mb</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<p>发送的邮件是32位任意格式的数据，可以是一个整型值或者一个指向缓冲区的指针。</p>
+<p>当邮箱中的邮件已满时，发送邮件的线程或者中断程序会收到-RT_EFULL的返回值。</p>
+<p>输入参数：</p>
+<ul class="simple">
+<li><p>mb 邮箱对象的句柄</p></li>
+<li><p>value 邮件内容</p></li>
+</ul>
+<p>返回值</p>
+<ul class="simple">
+<li><p>RT_EOK 发送成功</p></li>
+<li><p>-RT_EFULL 邮箱已经满了</p></li>
+</ul>
+</div>
+<div class="section" id="id9">
+<h4>等待方式发送邮件<a class="headerlink" href="#id9" title="永久链接至标题"></a></h4>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">rt_err_t</span> <span class="nf">rt_mb_send_wait</span><span class="p">(</span><span class="n">rt_mailbox_t</span> <span class="n">mb</span><span class="p">,</span>
+                        <span class="n">rt_ubase_t</span>   <span class="n">value</span><span class="p">,</span>
+                        <span class="n">rt_int32_t</span>   <span class="n">timeout</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="n">rt_thread</span> <span class="o">*</span><span class="kr">thread</span><span class="p">;</span>
+    <span class="k">register</span> <span class="n">rt_ubase_t</span> <span class="n">temp</span><span class="p">;</span>
+    <span class="n">rt_uint32_t</span> <span class="n">tick_delta</span><span class="p">;</span>
+
+    <span class="cm">/* parameter check */</span>
+    <span class="n">RT_ASSERT</span><span class="p">(</span><span class="n">mb</span> <span class="o">!=</span> <span class="n">RT_NULL</span><span class="p">);</span>
+    <span class="n">RT_ASSERT</span><span class="p">(</span><span class="n">rt_object_get_type</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">parent</span><span class="p">)</span> <span class="o">==</span> <span class="n">RT_Object_Class_MailBox</span><span class="p">);</span>
+
+    <span class="cm">/* initialize delta tick */</span>
+    <span class="n">tick_delta</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="cm">/* get current thread */</span>
+    <span class="kr">thread</span> <span class="o">=</span> <span class="n">rt_thread_self</span><span class="p">();</span>
+
+    <span class="n">RT_OBJECT_HOOK_CALL</span><span class="p">(</span><span class="n">rt_object_put_hook</span><span class="p">,</span> <span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">parent</span><span class="p">)));</span>
+
+    <span class="cm">/* disable interrupt */</span>
+    <span class="n">temp</span> <span class="o">=</span> <span class="n">rt_hw_interrupt_disable</span><span class="p">();</span>
+
+    <span class="cm">/* for non-blocking call */</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">entry</span> <span class="o">==</span> <span class="n">mb</span><span class="o">-&gt;</span><span class="n">size</span> <span class="o">&amp;&amp;</span> <span class="n">timeout</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">rt_hw_interrupt_enable</span><span class="p">(</span><span class="n">temp</span><span class="p">);</span>
+
+        <span class="k">return</span> <span class="o">-</span><span class="n">RT_EFULL</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="cm">/* mailbox is full */</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">entry</span> <span class="o">==</span> <span class="n">mb</span><span class="o">-&gt;</span><span class="n">size</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="cm">/* reset error number in thread */</span>
+        <span class="kr">thread</span><span class="o">-&gt;</span><span class="n">error</span> <span class="o">=</span> <span class="n">RT_EOK</span><span class="p">;</span>
+
+        <span class="cm">/* no waiting, return timeout */</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">timeout</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="cm">/* enable interrupt */</span>
+            <span class="n">rt_hw_interrupt_enable</span><span class="p">(</span><span class="n">temp</span><span class="p">);</span>
+
+            <span class="k">return</span> <span class="o">-</span><span class="n">RT_EFULL</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="n">RT_DEBUG_IN_THREAD_CONTEXT</span><span class="p">;</span>
+        <span class="cm">/* suspend current thread */</span>
+        <span class="n">rt_ipc_list_suspend</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">suspend_sender_thread</span><span class="p">),</span>
+                            <span class="kr">thread</span><span class="p">,</span>
+                            <span class="n">mb</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">parent</span><span class="p">.</span><span class="n">flag</span><span class="p">);</span>
+
+        <span class="cm">/* has waiting time, start thread timer */</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">timeout</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="cm">/* get the start tick of timer */</span>
+            <span class="n">tick_delta</span> <span class="o">=</span> <span class="n">rt_tick_get</span><span class="p">();</span>
+
+            <span class="n">RT_DEBUG_LOG</span><span class="p">(</span><span class="n">RT_DEBUG_IPC</span><span class="p">,</span> <span class="p">(</span><span class="s">&quot;mb_send_wait: start timer of thread:%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span>
+                                        <span class="kr">thread</span><span class="o">-&gt;</span><span class="n">name</span><span class="p">));</span>
+
+            <span class="cm">/* reset the timeout of thread timer and start it */</span>
+            <span class="n">rt_timer_control</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="kr">thread</span><span class="o">-&gt;</span><span class="n">thread_timer</span><span class="p">),</span>
+                            <span class="n">RT_TIMER_CTRL_SET_TIME</span><span class="p">,</span>
+                            <span class="o">&amp;</span><span class="n">timeout</span><span class="p">);</span>
+            <span class="n">rt_timer_start</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="kr">thread</span><span class="o">-&gt;</span><span class="n">thread_timer</span><span class="p">));</span>
+        <span class="p">}</span>
+
+        <span class="cm">/* enable interrupt */</span>
+        <span class="n">rt_hw_interrupt_enable</span><span class="p">(</span><span class="n">temp</span><span class="p">);</span>
+
+        <span class="cm">/* re-schedule */</span>
+        <span class="n">rt_schedule</span><span class="p">();</span>
+
+        <span class="cm">/* resume from suspend state */</span>
+        <span class="k">if</span> <span class="p">(</span><span class="kr">thread</span><span class="o">-&gt;</span><span class="n">error</span> <span class="o">!=</span> <span class="n">RT_EOK</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="cm">/* return error */</span>
+            <span class="k">return</span> <span class="kr">thread</span><span class="o">-&gt;</span><span class="n">error</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="cm">/* disable interrupt */</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="n">rt_hw_interrupt_disable</span><span class="p">();</span>
+
+        <span class="cm">/* if it&#39;s not waiting forever and then re-calculate timeout tick */</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">timeout</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">tick_delta</span> <span class="o">=</span> <span class="n">rt_tick_get</span><span class="p">()</span> <span class="o">-</span> <span class="n">tick_delta</span><span class="p">;</span>
+            <span class="n">timeout</span> <span class="o">-=</span> <span class="n">tick_delta</span><span class="p">;</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">timeout</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="n">timeout</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="cm">/* set ptr */</span>
+    <span class="n">mb</span><span class="o">-&gt;</span><span class="n">msg_pool</span><span class="p">[</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">in_offset</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span><span class="p">;</span>
+    <span class="cm">/* increase input offset */</span>
+    <span class="o">++</span> <span class="n">mb</span><span class="o">-&gt;</span><span class="n">in_offset</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">in_offset</span> <span class="o">&gt;=</span> <span class="n">mb</span><span class="o">-&gt;</span><span class="n">size</span><span class="p">)</span>
+        <span class="n">mb</span><span class="o">-&gt;</span><span class="n">in_offset</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">entry</span> <span class="o">&lt;</span> <span class="n">RT_MB_ENTRY_MAX</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="cm">/* increase message entry */</span>
+        <span class="n">mb</span><span class="o">-&gt;</span><span class="n">entry</span> <span class="o">++</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">else</span>
+    <span class="p">{</span>
+        <span class="n">rt_hw_interrupt_enable</span><span class="p">(</span><span class="n">temp</span><span class="p">);</span> <span class="cm">/* enable interrupt */</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">RT_EFULL</span><span class="p">;</span> <span class="cm">/* value overflowed */</span>
+    <span class="p">}</span>
+
+    <span class="cm">/* resume suspended thread */</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">rt_list_isempty</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">suspend_thread</span><span class="p">))</span>
+    <span class="p">{</span>
+        <span class="n">rt_ipc_list_resume</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">suspend_thread</span><span class="p">));</span>
+
+        <span class="cm">/* enable interrupt */</span>
+        <span class="n">rt_hw_interrupt_enable</span><span class="p">(</span><span class="n">temp</span><span class="p">);</span>
+
+        <span class="n">rt_schedule</span><span class="p">();</span>
+
+        <span class="k">return</span> <span class="n">RT_EOK</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="cm">/* enable interrupt */</span>
+    <span class="n">rt_hw_interrupt_enable</span><span class="p">(</span><span class="n">temp</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="n">RT_EOK</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>rt_mb_send_wait和rt_mb_send的区别在于是否有等待时间。</p>
+<p>如果邮箱已经满了，那么发送线程将根据设定的timeout参数等待邮箱。如果设置的超时时间到达，但依然没有空出空间，发送线程将被唤醒并返回错误码。</p>
+<ul class="simple">
+<li><p>timeout 超时时间</p></li>
+</ul>
+</div>
+<div class="section" id="id10">
+<h4>接收邮件<a class="headerlink" href="#id10" title="永久链接至标题"></a></h4>
+<p>只有当接收者接收的邮箱中有邮件时，接收者才能立即取到邮件并返回RT_ROK的返回值，否则接收线程会更具超时时间设置，或挂起在邮箱的等待线程队列上，或直接返回。</p>
+<div class="literal-block-wrapper docutils container" id="id27">
+<div class="code-block-caption"><span class="caption-text">接收邮件函数</span><a class="headerlink" href="#id27" title="永久链接至代码"></a></div>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span>    <span class="n">rt_err_t</span> <span class="nf">rt_mb_recv</span><span class="p">(</span><span class="n">rt_mailbox_t</span> <span class="n">mb</span><span class="p">,</span> <span class="n">rt_ubase_t</span> <span class="o">*</span><span class="n">value</span><span class="p">,</span> <span class="n">rt_int32_t</span> <span class="n">timeout</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="n">rt_thread</span> <span class="o">*</span><span class="kr">thread</span><span class="p">;</span>
+    <span class="k">register</span> <span class="n">rt_ubase_t</span> <span class="n">temp</span><span class="p">;</span>
+    <span class="n">rt_uint32_t</span> <span class="n">tick_delta</span><span class="p">;</span>
+
+    <span class="cm">/* parameter check */</span>
+    <span class="n">RT_ASSERT</span><span class="p">(</span><span class="n">mb</span> <span class="o">!=</span> <span class="n">RT_NULL</span><span class="p">);</span>
+    <span class="n">RT_ASSERT</span><span class="p">(</span><span class="n">rt_object_get_type</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">parent</span><span class="p">)</span> <span class="o">==</span> <span class="n">RT_Object_Class_MailBox</span><span class="p">);</span>
+
+    <span class="cm">/* initialize delta tick */</span>
+    <span class="n">tick_delta</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="cm">/* get current thread */</span>
+    <span class="kr">thread</span> <span class="o">=</span> <span class="n">rt_thread_self</span><span class="p">();</span>
+
+    <span class="n">RT_OBJECT_HOOK_CALL</span><span class="p">(</span><span class="n">rt_object_trytake_hook</span><span class="p">,</span> <span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">parent</span><span class="p">)));</span>
+
+    <span class="cm">/* disable interrupt */</span>
+    <span class="n">temp</span> <span class="o">=</span> <span class="n">rt_hw_interrupt_disable</span><span class="p">();</span>
+
+    <span class="cm">/* for non-blocking call */</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">entry</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">timeout</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">rt_hw_interrupt_enable</span><span class="p">(</span><span class="n">temp</span><span class="p">);</span>
+
+        <span class="k">return</span> <span class="o">-</span><span class="n">RT_ETIMEOUT</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="cm">/* mailbox is empty */</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">entry</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="cm">/* reset error number in thread */</span>
+        <span class="kr">thread</span><span class="o">-&gt;</span><span class="n">error</span> <span class="o">=</span> <span class="n">RT_EOK</span><span class="p">;</span>
+
+        <span class="cm">/* no waiting, return timeout */</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">timeout</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="cm">/* enable interrupt */</span>
+            <span class="n">rt_hw_interrupt_enable</span><span class="p">(</span><span class="n">temp</span><span class="p">);</span>
+
+            <span class="kr">thread</span><span class="o">-&gt;</span><span class="n">error</span> <span class="o">=</span> <span class="o">-</span><span class="n">RT_ETIMEOUT</span><span class="p">;</span>
+
+            <span class="k">return</span> <span class="o">-</span><span class="n">RT_ETIMEOUT</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="n">RT_DEBUG_IN_THREAD_CONTEXT</span><span class="p">;</span>
+        <span class="cm">/* suspend current thread */</span>
+        <span class="n">rt_ipc_list_suspend</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">suspend_thread</span><span class="p">),</span>
+                            <span class="kr">thread</span><span class="p">,</span>
+                            <span class="n">mb</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">parent</span><span class="p">.</span><span class="n">flag</span><span class="p">);</span>
+
+        <span class="cm">/* has waiting time, start thread timer */</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">timeout</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="cm">/* get the start tick of timer */</span>
+            <span class="n">tick_delta</span> <span class="o">=</span> <span class="n">rt_tick_get</span><span class="p">();</span>
+
+            <span class="n">RT_DEBUG_LOG</span><span class="p">(</span><span class="n">RT_DEBUG_IPC</span><span class="p">,</span> <span class="p">(</span><span class="s">&quot;mb_recv: start timer of thread:%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span>
+                                        <span class="kr">thread</span><span class="o">-&gt;</span><span class="n">name</span><span class="p">));</span>
+
+            <span class="cm">/* reset the timeout of thread timer and start it */</span>
+            <span class="n">rt_timer_control</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="kr">thread</span><span class="o">-&gt;</span><span class="n">thread_timer</span><span class="p">),</span>
+                            <span class="n">RT_TIMER_CTRL_SET_TIME</span><span class="p">,</span>
+                            <span class="o">&amp;</span><span class="n">timeout</span><span class="p">);</span>
+            <span class="n">rt_timer_start</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="kr">thread</span><span class="o">-&gt;</span><span class="n">thread_timer</span><span class="p">));</span>
+        <span class="p">}</span>
+
+        <span class="cm">/* enable interrupt */</span>
+        <span class="n">rt_hw_interrupt_enable</span><span class="p">(</span><span class="n">temp</span><span class="p">);</span>
+
+        <span class="cm">/* re-schedule */</span>
+        <span class="n">rt_schedule</span><span class="p">();</span>
+
+        <span class="cm">/* resume from suspend state */</span>
+        <span class="k">if</span> <span class="p">(</span><span class="kr">thread</span><span class="o">-&gt;</span><span class="n">error</span> <span class="o">!=</span> <span class="n">RT_EOK</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="cm">/* return error */</span>
+            <span class="k">return</span> <span class="kr">thread</span><span class="o">-&gt;</span><span class="n">error</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="cm">/* disable interrupt */</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="n">rt_hw_interrupt_disable</span><span class="p">();</span>
+
+        <span class="cm">/* if it&#39;s not waiting forever and then re-calculate timeout tick */</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">timeout</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">tick_delta</span> <span class="o">=</span> <span class="n">rt_tick_get</span><span class="p">()</span> <span class="o">-</span> <span class="n">tick_delta</span><span class="p">;</span>
+            <span class="n">timeout</span> <span class="o">-=</span> <span class="n">tick_delta</span><span class="p">;</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">timeout</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="n">timeout</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="cm">/* fill ptr */</span>
+    <span class="o">*</span><span class="n">value</span> <span class="o">=</span> <span class="n">mb</span><span class="o">-&gt;</span><span class="n">msg_pool</span><span class="p">[</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">out_offset</span><span class="p">];</span>
+
+    <span class="cm">/* increase output offset */</span>
+    <span class="o">++</span> <span class="n">mb</span><span class="o">-&gt;</span><span class="n">out_offset</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">out_offset</span> <span class="o">&gt;=</span> <span class="n">mb</span><span class="o">-&gt;</span><span class="n">size</span><span class="p">)</span>
+        <span class="n">mb</span><span class="o">-&gt;</span><span class="n">out_offset</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+    <span class="cm">/* decrease message entry */</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">entry</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">mb</span><span class="o">-&gt;</span><span class="n">entry</span> <span class="o">--</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="cm">/* resume suspended thread */</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">rt_list_isempty</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">suspend_sender_thread</span><span class="p">)))</span>
+    <span class="p">{</span>
+        <span class="n">rt_ipc_list_resume</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">suspend_sender_thread</span><span class="p">));</span>
+
+        <span class="cm">/* enable interrupt */</span>
+        <span class="n">rt_hw_interrupt_enable</span><span class="p">(</span><span class="n">temp</span><span class="p">);</span>
+
+        <span class="n">RT_OBJECT_HOOK_CALL</span><span class="p">(</span><span class="n">rt_object_take_hook</span><span class="p">,</span> <span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">parent</span><span class="p">)));</span>
+
+        <span class="n">rt_schedule</span><span class="p">();</span>
+
+        <span class="k">return</span> <span class="n">RT_EOK</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="cm">/* enable interrupt */</span>
+    <span class="n">rt_hw_interrupt_enable</span><span class="p">(</span><span class="n">temp</span><span class="p">);</span>
+
+    <span class="n">RT_OBJECT_HOOK_CALL</span><span class="p">(</span><span class="n">rt_object_take_hook</span><span class="p">,</span> <span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">mb</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">parent</span><span class="p">)));</span>
+
+    <span class="k">return</span> <span class="n">RT_EOK</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<p>接收邮件时，接收者需指定接收邮件的邮箱句柄，并指定接收到邮件的存放位置，以及最多能够等待的超时时间。</p>
+<p>如果接收时设定了超时，当指定的时间内依然未收到邮件时，将返回-RT_ETIMEOUT</p>
+<p>参数的描述</p>
+<ul class="simple">
+<li><p>mb 邮箱对象的句柄</p></li>
+<li><p>value 邮件内容</p></li>
+<li><p>timeout 超时时间</p></li>
+</ul>
+<p>返回值：</p>
+<ul class="simple">
+<li><p>RT_EOK 发送成功</p></li>
+<li><p>-RT_ETIMEOUT 超时</p></li>
+<li><p>-RT_ERROR 失败，返回错误</p></li>
+</ul>
+<div class="literal-block-wrapper docutils container" id="id28">
+<div class="code-block-caption"><span class="caption-text">邮箱使用例程</span><a class="headerlink" href="#id28" title="永久链接至代码"></a></div>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="cp">#define THREAD_PRIOITY      10</span>
+<span class="cp">#define THREAD_TIMESLICE    5</span>
+
+<span class="k">static</span> <span class="k">struct</span> <span class="n">rt_mailbox</span> <span class="n">mb</span><span class="p">;</span>
+
+<span class="k">static</span> <span class="kt">char</span> <span class="n">mb_pool</span><span class="p">[</span><span class="mi">128</span><span class="p">];</span>
+
+<span class="k">static</span> <span class="kt">char</span> <span class="n">mb_str1</span> <span class="o">=</span> <span class="s">&quot;I&#39;m a mail!&quot;</span><span class="p">;</span>
+<span class="k">static</span> <span class="kt">char</span> <span class="n">mb_str2</span> <span class="o">=</span> <span class="s">&quot;this is another mail!&quot;</span><span class="p">;</span>
+<span class="k">static</span> <span class="kt">char</span> <span class="n">mb_str3</span> <span class="o">=</span> <span class="s">&quot;over!&quot;</span><span class="p">;</span>
+
+<span class="n">ALIGN</span><span class="p">(</span><span class="n">RT_ALIGN_SIZE</span><span class="p">)</span>
+<span class="k">static</span> <span class="kt">char</span>  <span class="n">thread1_stack</span><span class="p">([</span><span class="mi">1024</span><span class="p">]);</span>
+<span class="k">static</span> <span class="k">struct</span> <span class="n">rt_thread</span> <span class="n">thread1</span><span class="p">;</span>
+
+<span class="k">static</span> <span class="kt">void</span> <span class="nf">thread1_entry</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">parameter</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">char</span> <span class="o">*</span><span class="n">str</span><span class="p">;</span>
+
+    <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;thread1: try to recv a mail</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+
+        <span class="k">if</span><span class="p">(</span><span class="n">rt_mb_recv</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mb</span><span class="p">,</span> <span class="p">(</span><span class="n">rt_uint32_t</span> <span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">str</span><span class="p">,</span> <span class="n">RT_WAITING_FOREVER</span><span class="p">)</span> <span class="o">==</span> <span class="n">RT_EOK</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;thread1: get a mail from mailbox, the content:%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">str</span><span class="p">);</span>
+            <span class="k">if</span><span class="p">(</span><span class="n">str</span> <span class="o">==</span> <span class="n">mb_str3</span><span class="p">)</span>
+                <span class="k">break</span><span class="p">;</span>
+
+            <span class="n">rt_thread_delay</span><span class="p">(</span><span class="mi">100</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="n">rt_mb_detach</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mb</span><span class="p">);</span>
+
+<span class="p">}</span>
+
+<span class="n">ALIGN</span><span class="p">(</span><span class="n">RT_ALIGN_SIZE</span><span class="p">)</span>
+<span class="k">static</span> <span class="kt">char</span>  <span class="n">thread2_stack</span><span class="p">([</span><span class="mi">1024</span><span class="p">]);</span>
+<span class="k">static</span> <span class="k">struct</span> <span class="n">rt_thread</span> <span class="n">thread2</span><span class="p">;</span>
+
+<span class="k">static</span> <span class="kt">void</span> <span class="nf">thread2_entry</span><span class="p">(</span><span class="kt">void</span> <span class="o">*</span><span class="n">parameter</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">rt_uint8_t</span> <span class="n">count</span><span class="p">;</span>
+
+    <span class="n">count</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+    <span class="k">while</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">count</span> <span class="o">++</span><span class="p">;</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">count</span> <span class="o">&amp;</span> <span class="mh">0x01</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">rt_mb_send</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mb</span><span class="p">,</span> <span class="p">(</span><span class="n">rt_uint32_t</span><span class="p">)</span><span class="o">&amp;</span><span class="n">mb_str1</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="k">else</span><span class="p">{</span>
+            <span class="n">rt_mb_send</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mb</span><span class="p">,</span> <span class="p">(</span><span class="n">rt_uint32_t</span><span class="p">)</span><span class="o">&amp;</span><span class="n">mb_str2</span><span class="p">);</span>
+        <span class="p">}</span>
+
+    <span class="n">rt_thread_delay</span><span class="p">(</span><span class="mi">200</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="n">rt_mb_send</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mb</span><span class="p">,</span> <span class="p">(</span><span class="n">rt_uint32_t</span><span class="p">)</span><span class="o">&amp;</span><span class="n">mb_str3</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">mailbox_sample</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">rt_err_t</span> <span class="n">result</span><span class="p">;</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">rt_mb_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mb</span><span class="p">,</span> <span class="s">&quot;mbt&quot;</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">mb_pool</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">mb_pool</span><span class="p">)</span><span class="o">/</span><span class="mi">4</span><span class="p">,</span> <span class="n">RT_IPC_FLAG_FIFO</span><span class="p">);</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="n">result</span> <span class="o">!=</span> <span class="n">RT_EOK</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">rt_kprintf</span><span class="p">(</span><span class="s">&quot;init mailbox failed.</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">);</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="n">rt_thread_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">thread1</span><span class="p">,</span>
+            <span class="s">&quot;thread1&quot;</span><span class="p">,</span>
+            <span class="n">thread1_entry</span><span class="p">,</span>
+            <span class="n">RT_NULL</span><span class="p">,</span>
+            <span class="o">&amp;</span><span class="n">thread1_stack</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="k">sizeof</span><span class="p">(</span><span class="n">thread1_stack</span><span class="p">),</span>
+            <span class="n">THREAD_PRIOITY</span><span class="p">,</span>
+            <span class="n">THREAD_TIMESLICE</span><span class="p">);</span>
+
+    <span class="n">rt_thread_startup</span><span class="p">(</span><span class="o">&amp;</span><span class="n">thread1</span><span class="p">);</span>
+
+    <span class="n">rt_thread_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">thread2</span><span class="p">,</span>
+            <span class="s">&quot;thread2&quot;</span><span class="p">,</span>
+            <span class="n">thread2_entry</span><span class="p">,</span>
+            <span class="n">RT_NULL</span><span class="p">,</span>
+            <span class="o">&amp;</span><span class="n">thread2_stack</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="k">sizeof</span><span class="p">(</span><span class="n">thread2_stack</span><span class="p">),</span>
+            <span class="n">THREAD_PRIOITY</span><span class="p">,</span>
+            <span class="n">THREAD_TIMESLICE</span><span class="p">);</span>
+
+    <span class="n">rt_thread_startup</span><span class="p">(</span><span class="o">&amp;</span><span class="n">thread2</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+
+
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="id11">
+<h4>邮箱的使用场合<a class="headerlink" href="#id11" title="永久链接至标题"></a></h4>
+<p>邮箱在RT-Thread操作系统的实现中能够一次传递一个4字节大小的邮件，并且具备一定的存储功能，能够缓存一定数量的邮件数。</p>
+<div class="admonition tip">
+<p class="admonition-title">小技巧</p>
+<p>由于在32系统上4字节的内容恰好可以放置一个指针，因此当需要在线程间传递比较大的消息时，可以把指向一个缓冲区的指针作为邮件
+发送到邮箱中，即邮箱也可以传递指针。</p>
+</div>
+<div class="literal-block-wrapper docutils container" id="id29">
+<div class="code-block-caption"><span class="caption-text">指针例子</span><a class="headerlink" href="#id29" title="永久链接至代码"></a></div>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="c1">//消息结构体，包含指向数据的指针data_ptr和数据块长度的变量data_size</span>
+
+<span class="k">struct</span> <span class="n">msg</span>
+<span class="p">{</span>
+    <span class="n">rt_uint8_t</span> <span class="o">*</span><span class="n">data_ptr</span><span class="p">;</span>
+    <span class="n">rt_uint32_t</span> <span class="n">data_size</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="c1">//发送给另一个线程</span>
+
+<span class="k">struct</span> <span class="n">msg</span><span class="o">*</span> <span class="n">msg_ptr</span><span class="p">;</span>
+
+<span class="n">msg_ptr</span> <span class="o">=</span> <span class="p">(</span><span class="k">struct</span> <span class="n">msg</span><span class="o">*</span><span class="p">)</span><span class="n">rt_malloc</span><span class="p">(</span><span class="k">sizeof</span><span class="p">(</span><span class="k">struct</span> <span class="n">msg</span><span class="p">));</span>
+<span class="n">msg_ptr</span><span class="o">-&gt;</span><span class="n">data_ptr</span> <span class="o">=</span> <span class="p">...;</span><span class="c1">//指向相应的数据块地址</span>
+<span class="n">msg_ptr</span><span class="o">-&gt;</span><span class="n">data_size</span> <span class="o">=</span> <span class="n">len</span><span class="p">;</span><span class="c1">//数据块长度</span>
+<span class="c1">//发送消息指针给mb邮箱</span>
+<span class="n">rt_mb_send</span><span class="p">(</span><span class="n">mb</span><span class="p">,</span> <span class="p">(</span><span class="n">rt_uint32_t</span><span class="p">)</span><span class="n">msg_ptr</span><span class="p">);</span>
+
+<span class="c1">//在接收的过程中，因为收取过来的是指针，而msg_ptr是一个新分配出来的内存块，所以在接收线程处理完毕后，需要释放相应的内存块</span>
+
+<span class="k">struct</span> <span class="n">msg</span><span class="o">*</span> <span class="n">msg_ptr</span><span class="p">;</span>
+<span class="k">if</span><span class="p">(</span><span class="n">rt_mb_resc</span><span class="p">(</span><span class="n">mb</span><span class="p">,</span> <span class="p">(</span><span class="n">rt_uint32_t</span><span class="o">*</span><span class="p">)</span><span class="o">&amp;</span><span class="n">msg_ptr</span><span class="p">)</span> <span class="o">==</span> <span class="n">RT_EOK</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">rt_free</span><span class="p">(</span><span class="n">msg_ptr</span><span class="p">);</span><span class="c1">//在接收完线程处理完毕后，需要释放相应的内存块</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="section" id="id12">
+<h2>消息队列<a class="headerlink" href="#id12" title="永久链接至标题"></a></h2>
+<p>消息队列是另一种常见的线程间通信方式，是邮箱的扩展。</p>
+<p>应用于：线程间的消息交换、使用串口接收不定长数据等。</p>
+<div class="section" id="id13">
+<h3>消息队列的工作机制<a class="headerlink" href="#id13" title="永久链接至标题"></a></h3>
+<p>消息队列能够接收来自线程或终端服务例程中不固定长度的信息，并把消息缓存存在自己的内存空间中。</p>
+<p>其他线程也能够从消息队列中读取相应的消息，而当消息队列是空的时候，可以挂起读取线程。</p>
+<p>当有新的消息到达时，挂起的线程将被唤醒以接收并处理消息。</p>
+<p><strong>消息队列是一种异步通信方式</strong></p>
+<p>当有多个消息发送到消息队列是，线程先得到的是最先进入消息队列的消息，即先进先出原则。</p>
+</div>
+<div class="section" id="id14">
+<h3>消息队列控制块<a class="headerlink" href="#id14" title="永久链接至标题"></a></h3>
+<p>消息队列控制块是操作系统用于管理消息队列的一个数据结构，有结构体rt_messagequeue表示，另一种C表达方式rt_mg_t，表示
+的是消息队列的句柄，在C语言中的实现是消息队列控制块的指针。</p>
+<div class="literal-block-wrapper docutils container" id="id30">
+<div class="code-block-caption"><span class="caption-text">消息队列控制块定义</span><a class="headerlink" href="#id30" title="永久链接至代码"></a></div>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="k">struct</span> <span class="n">rt_messagequeue</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="n">rt_ipc_object</span> <span class="n">parent</span><span class="p">;</span>                        <span class="cm">/**&lt; inherit from ipc_object */</span>
+
+    <span class="kt">void</span>                <span class="o">*</span><span class="n">msg_pool</span><span class="p">;</span>                      <span class="cm">/**&lt; start address of message queue */</span>
+
+    <span class="n">rt_uint16_t</span>          <span class="n">msg_size</span><span class="p">;</span>                      <span class="cm">/**&lt; message size of each message */</span>
+    <span class="n">rt_uint16_t</span>          <span class="n">max_msgs</span><span class="p">;</span>                      <span class="cm">/**&lt; max number of messages */</span>
+
+    <span class="n">rt_uint16_t</span>          <span class="n">entry</span><span class="p">;</span>                         <span class="cm">/**&lt; index of messages in the queue */</span>
+
+    <span class="kt">void</span>                <span class="o">*</span><span class="n">msg_queue_head</span><span class="p">;</span>                <span class="cm">/**&lt; list head */</span>
+    <span class="kt">void</span>                <span class="o">*</span><span class="n">msg_queue_tail</span><span class="p">;</span>                <span class="cm">/**&lt; list tail */</span>
+    <span class="kt">void</span>                <span class="o">*</span><span class="n">msg_queue_free</span><span class="p">;</span>                <span class="cm">/**&lt; pointer indicated the free node of queue */</span>
+
+    <span class="n">rt_list_t</span>            <span class="n">suspend_sender_thread</span><span class="p">;</span>         <span class="cm">/**&lt; sender thread suspended on this message queue */</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="id15">
+<h3>消息队列的管理方式<a class="headerlink" href="#id15" title="永久链接至标题"></a></h3>
+<div class="section" id="id16">
+<h4>创建和删除消息队列<a class="headerlink" href="#id16" title="永久链接至标题"></a></h4>
+<div class="literal-block-wrapper docutils container" id="id31">
+<div class="code-block-caption"><span class="caption-text">动态创建消息队列</span><a class="headerlink" href="#id31" title="永久链接至代码"></a></div>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">rt_mq_t</span> <span class="nf">rt_mq_create</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">,</span>
+                    <span class="n">rt_size_t</span>   <span class="n">msg_size</span><span class="p">,</span>
+                    <span class="n">rt_size_t</span>   <span class="n">max_msgs</span><span class="p">,</span>
+                    <span class="n">rt_uint8_t</span>  <span class="n">flag</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="n">rt_messagequeue</span> <span class="o">*</span><span class="n">mq</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="n">rt_mq_message</span> <span class="o">*</span><span class="n">head</span><span class="p">;</span>
+    <span class="k">register</span> <span class="n">rt_base_t</span> <span class="n">temp</span><span class="p">;</span>
+
+    <span class="n">RT_DEBUG_NOT_IN_INTERRUPT</span><span class="p">;</span>
+
+    <span class="cm">/* allocate object */</span>
+    <span class="n">mq</span> <span class="o">=</span> <span class="p">(</span><span class="n">rt_mq_t</span><span class="p">)</span><span class="n">rt_object_allocate</span><span class="p">(</span><span class="n">RT_Object_Class_MessageQueue</span><span class="p">,</span> <span class="n">name</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">mq</span> <span class="o">==</span> <span class="n">RT_NULL</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">mq</span><span class="p">;</span>
+
+    <span class="cm">/* set parent */</span>
+    <span class="n">mq</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">parent</span><span class="p">.</span><span class="n">flag</span> <span class="o">=</span> <span class="n">flag</span><span class="p">;</span>
+
+    <span class="cm">/* initialize ipc object */</span>
+    <span class="n">rt_ipc_object_init</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">mq</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">));</span>
+
+    <span class="cm">/* initialize message queue */</span>
+
+    <span class="cm">/* get correct message size */</span>
+    <span class="n">mq</span><span class="o">-&gt;</span><span class="n">msg_size</span> <span class="o">=</span> <span class="n">RT_ALIGN</span><span class="p">(</span><span class="n">msg_size</span><span class="p">,</span> <span class="n">RT_ALIGN_SIZE</span><span class="p">);</span>
+    <span class="n">mq</span><span class="o">-&gt;</span><span class="n">max_msgs</span> <span class="o">=</span> <span class="n">max_msgs</span><span class="p">;</span>
+
+    <span class="cm">/* allocate message pool */</span>
+    <span class="n">mq</span><span class="o">-&gt;</span><span class="n">msg_pool</span> <span class="o">=</span> <span class="n">RT_KERNEL_MALLOC</span><span class="p">((</span><span class="n">mq</span><span class="o">-&gt;</span><span class="n">msg_size</span> <span class="o">+</span> <span class="k">sizeof</span><span class="p">(</span><span class="k">struct</span> <span class="n">rt_mq_message</span><span class="p">))</span> <span class="o">*</span> <span class="n">mq</span><span class="o">-&gt;</span><span class="n">max_msgs</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">mq</span><span class="o">-&gt;</span><span class="n">msg_pool</span> <span class="o">==</span> <span class="n">RT_NULL</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">rt_object_delete</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">mq</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">parent</span><span class="p">));</span>
+
+        <span class="k">return</span> <span class="n">RT_NULL</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="cm">/* initialize message list */</span>
+    <span class="n">mq</span><span class="o">-&gt;</span><span class="n">msg_queue_head</span> <span class="o">=</span> <span class="n">RT_NULL</span><span class="p">;</span>
+    <span class="n">mq</span><span class="o">-&gt;</span><span class="n">msg_queue_tail</span> <span class="o">=</span> <span class="n">RT_NULL</span><span class="p">;</span>
+
+    <span class="cm">/* initialize message empty list */</span>
+    <span class="n">mq</span><span class="o">-&gt;</span><span class="n">msg_queue_free</span> <span class="o">=</span> <span class="n">RT_NULL</span><span class="p">;</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">temp</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">temp</span> <span class="o">&lt;</span> <span class="n">mq</span><span class="o">-&gt;</span><span class="n">max_msgs</span><span class="p">;</span> <span class="n">temp</span> <span class="o">++</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">head</span> <span class="o">=</span> <span class="p">(</span><span class="k">struct</span> <span class="n">rt_mq_message</span> <span class="o">*</span><span class="p">)((</span><span class="n">rt_uint8_t</span> <span class="o">*</span><span class="p">)</span><span class="n">mq</span><span class="o">-&gt;</span><span class="n">msg_pool</span> <span class="o">+</span>
+                                        <span class="n">temp</span> <span class="o">*</span> <span class="p">(</span><span class="n">mq</span><span class="o">-&gt;</span><span class="n">msg_size</span> <span class="o">+</span> <span class="k">sizeof</span><span class="p">(</span><span class="k">struct</span> <span class="n">rt_mq_message</span><span class="p">)));</span>
+        <span class="n">head</span><span class="o">-&gt;</span><span class="n">next</span> <span class="o">=</span> <span class="p">(</span><span class="k">struct</span> <span class="n">rt_mq_message</span> <span class="o">*</span><span class="p">)</span><span class="n">mq</span><span class="o">-&gt;</span><span class="n">msg_queue_free</span><span class="p">;</span>
+        <span class="n">mq</span><span class="o">-&gt;</span><span class="n">msg_queue_free</span> <span class="o">=</span> <span class="n">head</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="cm">/* the initial entry is zero */</span>
+    <span class="n">mq</span><span class="o">-&gt;</span><span class="n">entry</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+    <span class="cm">/* initialize an additional list of sender suspend thread */</span>
+    <span class="n">rt_list_init</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">mq</span><span class="o">-&gt;</span><span class="n">suspend_sender_thread</span><span class="p">));</span>
+
+    <span class="k">return</span> <span class="n">mq</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<p>创建消息队列时先从对象管理器中分配一个消息队列对象，然后给消息队列对象分配一个内存空间，组织成空闲消息链表，
+这块内存的大小=[消息大小+消息头（用于链表连接）的大小]*消息队列最大个数，接着再初始化消息队列，此时消息队列为空。</p>
+<p>输入参数：</p>
+<ul class="simple">
+<li><p>name 消息队列的名称</p></li>
+<li><p>msg_size 消息队列中一条消息的最大长度，单位为字节</p></li>
+<li><p>max_msgs 消息队列的最大个数</p></li>
+<li><p>falg 消息队列采用的等待方式，取RT_IPC_FLAG_FIFO和RT_IPC_FLAG_PRIO</p></li>
+</ul>
+<p>返回值：</p>
+<ul class="simple">
+<li><p>消息队列对象的句柄 成功</p></li>
+<li><p>RT_NULL 失败</p></li>
+</ul>
+<p>当消息队列不再被使用时，应该删除它以释放系统资源，一旦操作完成，消息队列将被永久性地删除。</p>
+<div class="literal-block-wrapper docutils container" id="id32">
+<div class="code-block-caption"><span class="caption-text">删除函数</span><a class="headerlink" href="#id32" title="永久链接至代码"></a></div>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">rt_err_t</span> <span class="nf">rt_mq_delete</span><span class="p">(</span><span class="n">rt_mq_t</span> <span class="n">mq</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">RT_DEBUG_NOT_IN_INTERRUPT</span><span class="p">;</span>
+
+    <span class="cm">/* parameter check */</span>
+    <span class="n">RT_ASSERT</span><span class="p">(</span><span class="n">mq</span> <span class="o">!=</span> <span class="n">RT_NULL</span><span class="p">);</span>
+    <span class="n">RT_ASSERT</span><span class="p">(</span><span class="n">rt_object_get_type</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mq</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">parent</span><span class="p">)</span> <span class="o">==</span> <span class="n">RT_Object_Class_MessageQueue</span><span class="p">);</span>
+    <span class="n">RT_ASSERT</span><span class="p">(</span><span class="n">rt_object_is_systemobject</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mq</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">parent</span><span class="p">)</span> <span class="o">==</span> <span class="n">RT_FALSE</span><span class="p">);</span>
+
+    <span class="cm">/* resume all suspended thread */</span>
+    <span class="n">rt_ipc_list_resume_all</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">mq</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">suspend_thread</span><span class="p">));</span>
+    <span class="cm">/* also resume all message queue private suspended thread */</span>
+    <span class="n">rt_ipc_list_resume_all</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">mq</span><span class="o">-&gt;</span><span class="n">suspend_sender_thread</span><span class="p">));</span>
+
+    <span class="cm">/* free message queue pool */</span>
+    <span class="n">RT_KERNEL_FREE</span><span class="p">(</span><span class="n">mq</span><span class="o">-&gt;</span><span class="n">msg_pool</span><span class="p">);</span>
+
+    <span class="cm">/* delete message queue object */</span>
+    <span class="n">rt_object_delete</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">mq</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">parent</span><span class="p">));</span>
+
+    <span class="k">return</span> <span class="n">RT_EOK</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<p>删除消息队列时，如果有线程被挂起在该消息队列等待队列上，则内核先唤醒挂起在该消息等待队列上的所有线程（线程返回值是-RT_ERROR），
+然后再释放消息队列使用的内存，最后删除消息队列对象。</p>
+<p>函数输入的是消息队列对象的句柄，返回RT_EOK时代表成功</p>
+</div>
+<div class="section" id="id17">
+<h4>初始化消息队列<a class="headerlink" href="#id17" title="永久链接至标题"></a></h4>
+<p>静态创建消息队列</p>
+<div class="literal-block-wrapper docutils container" id="id33">
+<div class="code-block-caption"><span class="caption-text">初始化</span><a class="headerlink" href="#id33" title="永久链接至代码"></a></div>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">rt_err_t</span> <span class="nf">rt_mq_init</span><span class="p">(</span><span class="n">rt_mq_t</span>     <span class="n">mq</span><span class="p">,</span>
+                    <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">,</span>
+                    <span class="kt">void</span>       <span class="o">*</span><span class="n">msgpool</span><span class="p">,</span>
+                    <span class="n">rt_size_t</span>   <span class="n">msg_size</span><span class="p">,</span>
+                    <span class="n">rt_size_t</span>   <span class="n">pool_size</span><span class="p">,</span>
+                    <span class="n">rt_uint8_t</span>  <span class="n">flag</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="n">rt_mq_message</span> <span class="o">*</span><span class="n">head</span><span class="p">;</span>
+    <span class="k">register</span> <span class="n">rt_base_t</span> <span class="n">temp</span><span class="p">;</span>
+
+    <span class="cm">/* parameter check */</span>
+    <span class="n">RT_ASSERT</span><span class="p">(</span><span class="n">mq</span> <span class="o">!=</span> <span class="n">RT_NULL</span><span class="p">);</span>
+
+    <span class="cm">/* initialize object */</span>
+    <span class="n">rt_object_init</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">mq</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">parent</span><span class="p">),</span> <span class="n">RT_Object_Class_MessageQueue</span><span class="p">,</span> <span class="n">name</span><span class="p">);</span>
+
+    <span class="cm">/* set parent flag */</span>
+    <span class="n">mq</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">parent</span><span class="p">.</span><span class="n">flag</span> <span class="o">=</span> <span class="n">flag</span><span class="p">;</span>
+
+    <span class="cm">/* initialize ipc object */</span>
+    <span class="n">rt_ipc_object_init</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">mq</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">));</span>
+
+    <span class="cm">/* set message pool */</span>
+    <span class="n">mq</span><span class="o">-&gt;</span><span class="n">msg_pool</span> <span class="o">=</span> <span class="n">msgpool</span><span class="p">;</span>
+
+    <span class="cm">/* get correct message size */</span>
+    <span class="n">mq</span><span class="o">-&gt;</span><span class="n">msg_size</span> <span class="o">=</span> <span class="n">RT_ALIGN</span><span class="p">(</span><span class="n">msg_size</span><span class="p">,</span> <span class="n">RT_ALIGN_SIZE</span><span class="p">);</span>
+    <span class="n">mq</span><span class="o">-&gt;</span><span class="n">max_msgs</span> <span class="o">=</span> <span class="n">pool_size</span> <span class="o">/</span> <span class="p">(</span><span class="n">mq</span><span class="o">-&gt;</span><span class="n">msg_size</span> <span class="o">+</span> <span class="k">sizeof</span><span class="p">(</span><span class="k">struct</span> <span class="n">rt_mq_message</span><span class="p">));</span>
+
+    <span class="cm">/* initialize message list */</span>
+    <span class="n">mq</span><span class="o">-&gt;</span><span class="n">msg_queue_head</span> <span class="o">=</span> <span class="n">RT_NULL</span><span class="p">;</span>
+    <span class="n">mq</span><span class="o">-&gt;</span><span class="n">msg_queue_tail</span> <span class="o">=</span> <span class="n">RT_NULL</span><span class="p">;</span>
+
+    <span class="cm">/* initialize message empty list */</span>
+    <span class="n">mq</span><span class="o">-&gt;</span><span class="n">msg_queue_free</span> <span class="o">=</span> <span class="n">RT_NULL</span><span class="p">;</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">temp</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">temp</span> <span class="o">&lt;</span> <span class="n">mq</span><span class="o">-&gt;</span><span class="n">max_msgs</span><span class="p">;</span> <span class="n">temp</span> <span class="o">++</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">head</span> <span class="o">=</span> <span class="p">(</span><span class="k">struct</span> <span class="n">rt_mq_message</span> <span class="o">*</span><span class="p">)((</span><span class="n">rt_uint8_t</span> <span class="o">*</span><span class="p">)</span><span class="n">mq</span><span class="o">-&gt;</span><span class="n">msg_pool</span> <span class="o">+</span>
+                                        <span class="n">temp</span> <span class="o">*</span> <span class="p">(</span><span class="n">mq</span><span class="o">-&gt;</span><span class="n">msg_size</span> <span class="o">+</span> <span class="k">sizeof</span><span class="p">(</span><span class="k">struct</span> <span class="n">rt_mq_message</span><span class="p">)));</span>
+        <span class="n">head</span><span class="o">-&gt;</span><span class="n">next</span> <span class="o">=</span> <span class="p">(</span><span class="k">struct</span> <span class="n">rt_mq_message</span> <span class="o">*</span><span class="p">)</span><span class="n">mq</span><span class="o">-&gt;</span><span class="n">msg_queue_free</span><span class="p">;</span>
+        <span class="n">mq</span><span class="o">-&gt;</span><span class="n">msg_queue_free</span> <span class="o">=</span> <span class="n">head</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="cm">/* the initial entry is zero */</span>
+    <span class="n">mq</span><span class="o">-&gt;</span><span class="n">entry</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+    <span class="cm">/* initialize an additional list of sender suspend thread */</span>
+    <span class="n">rt_list_init</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">mq</span><span class="o">-&gt;</span><span class="n">suspend_sender_thread</span><span class="p">));</span>
+
+    <span class="k">return</span> <span class="n">RT_EOK</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<p>参数的描述：</p>
+<ul class="simple">
+<li><p>mq 消息队列对象的句柄</p></li>
+<li><p>name 消息队列的名称</p></li>
+<li><p>msgpool 指向存放消息的缓冲区的指针</p></li>
+<li><p>msg_size 消息队列中一条消息的最大长度，单位为字节</p></li>
+<li><p>pool_size 存放消息的缓冲区大小</p></li>
+<li><p>flag 消息队列采用的等待方式，取RT_IPC_FLAG_FIFO和RT_IPC_FLAG_PRIO</p></li>
+</ul>
+<p>返回值：</p>
+<ul class="simple">
+<li><p>RT_EOK 成功</p></li>
+</ul>
+</div>
+<div class="section" id="id18">
+<h4>脱离消息队列<a class="headerlink" href="#id18" title="永久链接至标题"></a></h4>
+<div class="literal-block-wrapper docutils container" id="id34">
+<div class="code-block-caption"><span class="caption-text">脱离消息队列</span><a class="headerlink" href="#id34" title="永久链接至代码"></a></div>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">rt_err_t</span> <span class="nf">rt_mq_detach</span><span class="p">(</span><span class="n">rt_mq_t</span> <span class="n">mq</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="cm">/* parameter check */</span>
+    <span class="n">RT_ASSERT</span><span class="p">(</span><span class="n">mq</span> <span class="o">!=</span> <span class="n">RT_NULL</span><span class="p">);</span>
+    <span class="n">RT_ASSERT</span><span class="p">(</span><span class="n">rt_object_get_type</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mq</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">parent</span><span class="p">)</span> <span class="o">==</span> <span class="n">RT_Object_Class_MessageQueue</span><span class="p">);</span>
+    <span class="n">RT_ASSERT</span><span class="p">(</span><span class="n">rt_object_is_systemobject</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mq</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">parent</span><span class="p">));</span>
+
+    <span class="cm">/* resume all suspended thread */</span>
+    <span class="n">rt_ipc_list_resume_all</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mq</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">suspend_thread</span><span class="p">);</span>
+    <span class="cm">/* also resume all message queue private suspended thread */</span>
+    <span class="n">rt_ipc_list_resume_all</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">mq</span><span class="o">-&gt;</span><span class="n">suspend_sender_thread</span><span class="p">));</span>
+
+    <span class="cm">/* detach message queue object */</span>
+    <span class="n">rt_object_detach</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">mq</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">parent</span><span class="p">));</span>
+
+    <span class="k">return</span> <span class="n">RT_EOK</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<p>输入消息队列对象的句柄，返回RT_EOK时代表成功。</p>
+</div>
+<div class="section" id="id19">
+<h4>发送信息<a class="headerlink" href="#id19" title="永久链接至标题"></a></h4>
+<p>线程或者中断服务程序都可以给消息队列发送消息。</p>
+<p>当发送消息时，消息队列对象先从空闲消息链表上取下一个空闲消息块，把线程或者中断服务程序发送的消息内容复制到消息块上，
+然后把该消息块挂到消息队列的尾部。</p>
+<p>当且仅当空闲消息链表上有可用的空闲消息块时，发送者才能成功发送消息； 当空闲消息链表上无可用消息块时，说明消息队列已满。
+此时发送消息的线程或者中断程序会收到一个错误码（-RT_EFULL）。</p>
+<div class="literal-block-wrapper docutils container" id="id35">
+<div class="code-block-caption"><span class="caption-text">发送消息函数</span><a class="headerlink" href="#id35" title="永久链接至代码"></a></div>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">rt_err_t</span> <span class="nf">rt_mq_send</span><span class="p">(</span><span class="n">rt_mq_t</span> <span class="n">mq</span><span class="p">,</span> <span class="k">const</span> <span class="kt">void</span> <span class="o">*</span><span class="n">buffer</span><span class="p">,</span> <span class="n">rt_size_t</span> <span class="n">size</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">return</span> <span class="n">rt_mq_send_wait</span><span class="p">(</span><span class="n">mq</span><span class="p">,</span> <span class="n">buffer</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="literal-block-wrapper docutils container" id="id36">
+<div class="code-block-caption"><span class="caption-text">发送消息函数(带延迟)</span><a class="headerlink" href="#id36" title="永久链接至代码"></a></div>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">rt_err_t</span> <span class="nf">rt_mq_send_wait</span><span class="p">(</span><span class="n">rt_mq_t</span>     <span class="n">mq</span><span class="p">,</span>
+                        <span class="k">const</span> <span class="kt">void</span> <span class="o">*</span><span class="n">buffer</span><span class="p">,</span>
+                        <span class="n">rt_size_t</span>   <span class="n">size</span><span class="p">,</span>
+                        <span class="n">rt_int32_t</span>  <span class="n">timeout</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">register</span> <span class="n">rt_ubase_t</span> <span class="n">temp</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="n">rt_mq_message</span> <span class="o">*</span><span class="n">msg</span><span class="p">;</span>
+    <span class="n">rt_uint32_t</span> <span class="n">tick_delta</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="n">rt_thread</span> <span class="o">*</span><span class="kr">thread</span><span class="p">;</span>
+
+    <span class="cm">/* parameter check */</span>
+    <span class="n">RT_ASSERT</span><span class="p">(</span><span class="n">mq</span> <span class="o">!=</span> <span class="n">RT_NULL</span><span class="p">);</span>
+    <span class="n">RT_ASSERT</span><span class="p">(</span><span class="n">rt_object_get_type</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mq</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">parent</span><span class="p">)</span> <span class="o">==</span> <span class="n">RT_Object_Class_MessageQueue</span><span class="p">);</span>
+    <span class="n">RT_ASSERT</span><span class="p">(</span><span class="n">buffer</span> <span class="o">!=</span> <span class="n">RT_NULL</span><span class="p">);</span>
+    <span class="n">RT_ASSERT</span><span class="p">(</span><span class="n">size</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">);</span>
+
+    <span class="cm">/* greater than one message size */</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">size</span> <span class="o">&gt;</span> <span class="n">mq</span><span class="o">-&gt;</span><span class="n">msg_size</span><span class="p">)</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">RT_ERROR</span><span class="p">;</span>
+
+    <span class="cm">/* initialize delta tick */</span>
+    <span class="n">tick_delta</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="cm">/* get current thread */</span>
+    <span class="kr">thread</span> <span class="o">=</span> <span class="n">rt_thread_self</span><span class="p">();</span>
+
+    <span class="n">RT_OBJECT_HOOK_CALL</span><span class="p">(</span><span class="n">rt_object_put_hook</span><span class="p">,</span> <span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">mq</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">parent</span><span class="p">)));</span>
+
+    <span class="cm">/* disable interrupt */</span>
+    <span class="n">temp</span> <span class="o">=</span> <span class="n">rt_hw_interrupt_disable</span><span class="p">();</span>
+
+    <span class="cm">/* get a free list, there must be an empty item */</span>
+    <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="k">struct</span> <span class="n">rt_mq_message</span> <span class="o">*</span><span class="p">)</span><span class="n">mq</span><span class="o">-&gt;</span><span class="n">msg_queue_free</span><span class="p">;</span>
+    <span class="cm">/* for non-blocking call */</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">msg</span> <span class="o">==</span> <span class="n">RT_NULL</span> <span class="o">&amp;&amp;</span> <span class="n">timeout</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="cm">/* enable interrupt */</span>
+        <span class="n">rt_hw_interrupt_enable</span><span class="p">(</span><span class="n">temp</span><span class="p">);</span>
+
+        <span class="k">return</span> <span class="o">-</span><span class="n">RT_EFULL</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="cm">/* message queue is full */</span>
+    <span class="k">while</span> <span class="p">((</span><span class="n">msg</span> <span class="o">=</span> <span class="n">mq</span><span class="o">-&gt;</span><span class="n">msg_queue_free</span><span class="p">)</span> <span class="o">==</span> <span class="n">RT_NULL</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="cm">/* reset error number in thread */</span>
+        <span class="kr">thread</span><span class="o">-&gt;</span><span class="n">error</span> <span class="o">=</span> <span class="n">RT_EOK</span><span class="p">;</span>
+
+        <span class="cm">/* no waiting, return timeout */</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">timeout</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="cm">/* enable interrupt */</span>
+            <span class="n">rt_hw_interrupt_enable</span><span class="p">(</span><span class="n">temp</span><span class="p">);</span>
+
+            <span class="k">return</span> <span class="o">-</span><span class="n">RT_EFULL</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="n">RT_DEBUG_IN_THREAD_CONTEXT</span><span class="p">;</span>
+        <span class="cm">/* suspend current thread */</span>
+        <span class="n">rt_ipc_list_suspend</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">mq</span><span class="o">-&gt;</span><span class="n">suspend_sender_thread</span><span class="p">),</span>
+                            <span class="kr">thread</span><span class="p">,</span>
+                            <span class="n">mq</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">parent</span><span class="p">.</span><span class="n">flag</span><span class="p">);</span>
+
+        <span class="cm">/* has waiting time, start thread timer */</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">timeout</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="cm">/* get the start tick of timer */</span>
+            <span class="n">tick_delta</span> <span class="o">=</span> <span class="n">rt_tick_get</span><span class="p">();</span>
+
+            <span class="n">RT_DEBUG_LOG</span><span class="p">(</span><span class="n">RT_DEBUG_IPC</span><span class="p">,</span> <span class="p">(</span><span class="s">&quot;mq_send_wait: start timer of thread:%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span>
+                                        <span class="kr">thread</span><span class="o">-&gt;</span><span class="n">name</span><span class="p">));</span>
+
+            <span class="cm">/* reset the timeout of thread timer and start it */</span>
+            <span class="n">rt_timer_control</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="kr">thread</span><span class="o">-&gt;</span><span class="n">thread_timer</span><span class="p">),</span>
+                            <span class="n">RT_TIMER_CTRL_SET_TIME</span><span class="p">,</span>
+                            <span class="o">&amp;</span><span class="n">timeout</span><span class="p">);</span>
+            <span class="n">rt_timer_start</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="kr">thread</span><span class="o">-&gt;</span><span class="n">thread_timer</span><span class="p">));</span>
+        <span class="p">}</span>
+
+        <span class="cm">/* enable interrupt */</span>
+        <span class="n">rt_hw_interrupt_enable</span><span class="p">(</span><span class="n">temp</span><span class="p">);</span>
+
+        <span class="cm">/* re-schedule */</span>
+        <span class="n">rt_schedule</span><span class="p">();</span>
+
+        <span class="cm">/* resume from suspend state */</span>
+        <span class="k">if</span> <span class="p">(</span><span class="kr">thread</span><span class="o">-&gt;</span><span class="n">error</span> <span class="o">!=</span> <span class="n">RT_EOK</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="cm">/* return error */</span>
+            <span class="k">return</span> <span class="kr">thread</span><span class="o">-&gt;</span><span class="n">error</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="cm">/* disable interrupt */</span>
+        <span class="n">temp</span> <span class="o">=</span> <span class="n">rt_hw_interrupt_disable</span><span class="p">();</span>
+
+        <span class="cm">/* if it&#39;s not waiting forever and then re-calculate timeout tick */</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">timeout</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">tick_delta</span> <span class="o">=</span> <span class="n">rt_tick_get</span><span class="p">()</span> <span class="o">-</span> <span class="n">tick_delta</span><span class="p">;</span>
+            <span class="n">timeout</span> <span class="o">-=</span> <span class="n">tick_delta</span><span class="p">;</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">timeout</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="n">timeout</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="cm">/* move free list pointer */</span>
+    <span class="n">mq</span><span class="o">-&gt;</span><span class="n">msg_queue_free</span> <span class="o">=</span> <span class="n">msg</span><span class="o">-&gt;</span><span class="n">next</span><span class="p">;</span>
+
+    <span class="cm">/* enable interrupt */</span>
+    <span class="n">rt_hw_interrupt_enable</span><span class="p">(</span><span class="n">temp</span><span class="p">);</span>
+
+    <span class="cm">/* the msg is the new tailer of list, the next shall be NULL */</span>
+    <span class="n">msg</span><span class="o">-&gt;</span><span class="n">next</span> <span class="o">=</span> <span class="n">RT_NULL</span><span class="p">;</span>
+    <span class="cm">/* copy buffer */</span>
+    <span class="n">rt_memcpy</span><span class="p">(</span><span class="n">msg</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">buffer</span><span class="p">,</span> <span class="n">size</span><span class="p">);</span>
+
+    <span class="cm">/* disable interrupt */</span>
+    <span class="n">temp</span> <span class="o">=</span> <span class="n">rt_hw_interrupt_disable</span><span class="p">();</span>
+    <span class="cm">/* link msg to message queue */</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">mq</span><span class="o">-&gt;</span><span class="n">msg_queue_tail</span> <span class="o">!=</span> <span class="n">RT_NULL</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="cm">/* if the tail exists, */</span>
+        <span class="p">((</span><span class="k">struct</span> <span class="n">rt_mq_message</span> <span class="o">*</span><span class="p">)</span><span class="n">mq</span><span class="o">-&gt;</span><span class="n">msg_queue_tail</span><span class="p">)</span><span class="o">-&gt;</span><span class="n">next</span> <span class="o">=</span> <span class="n">msg</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="cm">/* set new tail */</span>
+    <span class="n">mq</span><span class="o">-&gt;</span><span class="n">msg_queue_tail</span> <span class="o">=</span> <span class="n">msg</span><span class="p">;</span>
+    <span class="cm">/* if the head is empty, set head */</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">mq</span><span class="o">-&gt;</span><span class="n">msg_queue_head</span> <span class="o">==</span> <span class="n">RT_NULL</span><span class="p">)</span>
+        <span class="n">mq</span><span class="o">-&gt;</span><span class="n">msg_queue_head</span> <span class="o">=</span> <span class="n">msg</span><span class="p">;</span>
+
+    <span class="k">if</span><span class="p">(</span><span class="n">mq</span><span class="o">-&gt;</span><span class="n">entry</span> <span class="o">&lt;</span> <span class="n">RT_MQ_ENTRY_MAX</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="cm">/* increase message entry */</span>
+        <span class="n">mq</span><span class="o">-&gt;</span><span class="n">entry</span> <span class="o">++</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">else</span>
+    <span class="p">{</span>
+        <span class="n">rt_hw_interrupt_enable</span><span class="p">(</span><span class="n">temp</span><span class="p">);</span> <span class="cm">/* enable interrupt */</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">RT_EFULL</span><span class="p">;</span> <span class="cm">/* value overflowed */</span>
+    <span class="p">}</span>
+
+    <span class="cm">/* resume suspended thread */</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">rt_list_isempty</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mq</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">suspend_thread</span><span class="p">))</span>
+    <span class="p">{</span>
+        <span class="n">rt_ipc_list_resume</span><span class="p">(</span><span class="o">&amp;</span><span class="p">(</span><span class="n">mq</span><span class="o">-&gt;</span><span class="n">parent</span><span class="p">.</span><span class="n">suspend_thread</span><span class="p">));</span>
+
+        <span class="cm">/* enable interrupt */</span>
+        <span class="n">rt_hw_interrupt_enable</span><span class="p">(</span><span class="n">temp</span><span class="p">);</span>
+
+        <span class="n">rt_schedule</span><span class="p">();</span>
+
+        <span class="k">return</span> <span class="n">RT_EOK</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="cm">/* enable interrupt */</span>
+    <span class="n">rt_hw_interrupt_enable</span><span class="p">(</span><span class="n">temp</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="n">RT_EOK</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<p>输入参数：</p>
+<ul class="simple">
+<li><p>name 消息队列对象的句柄</p></li>
+<li><p>buffer 消息内容</p></li>
+<li><p>size 消息大小</p></li>
+</ul>
+<p>返回:</p>
+<ul class="simple">
+<li><p>RT_EOK 成功</p></li>
+<li><p>-RT_EFULL 消息队列已满</p></li>
+<li><p>-RT_ERROR 失败，表示发送的消息长度大于消息队列中消息的最大长度</p></li>
+</ul>
+</div>
+<div class="section" id="id20">
+<h4>发送紧急信息<a class="headerlink" href="#id20" title="永久链接至标题"></a></h4>
+<p>当发送紧急消息时，从空闲链表上取下来的消息块不是挂到消息队列的队尾，而是挂到队首，这样接收者就能够优先接受到紧急信息，
+从而及时进行消息处理。</p>
+<div class="literal-block-wrapper docutils container" id="id37">
+<div class="code-block-caption"><span class="caption-text">紧急信息函数</span><a class="headerlink" href="#id37" title="永久链接至代码"></a></div>
+<div class="highlight-C notranslate"><div class="highlight"><pre><span></span><span class="n">rt_err_t</span> <span class="nf">rt_mq_urgent</span><span class="p">(</span><span class="n">rt_mq_t</span> <span class="n">mq</span><span class="p">,</span> <span class="k">const</span> <span class="kt">void</span> <span class="o">*</span><span class="n">buffer</span><span class="p">,</span> <span class="n">rt_size_t</span> <span class="n">size</span><span class="p">)</span>
+<span class="p">{</span>
+
+<span class="p">};</span>
+</pre></div>
+</div>
+</div>
+<ul class="simple">
+<li><p>mq 消息队列对象的句柄</p></li>
+<li><p>buffer 消息内容</p></li>
+<li><p>size 消息大小</p></li>
+</ul>
+<p>返回值：</p>
+<ul class="simple">
+<li><p>RT_EOK 成功</p></li>
+<li><p>-RT_EFULL 消息队列已满</p></li>
+<li><p>-RT_ERROR 失败</p></li>
+</ul>
+</div>
+<div class="section" id="id21">
+<h4>接收消息<a class="headerlink" href="#id21" title="永久链接至标题"></a></h4>
+<p>当消息队列中有消息时，接受者才能接收消息，否则接收者会根据超时时间设置，或挂起在消息队列的等待线程上，或直接返回。</p>
+<div class="literal-block-wrapper docutils container" id="id38">
+<div class="code-block-caption"><span class="caption-text">接收信息函数</span><a class="headerlink" href="#id38" title="永久链接至代码"></a></div>
+<div class="highlight-c notranslate"><div class="highlight"><pre><span></span><span class="n">rt_err_t</span> <span class="n">rt_mq_recv</span><span class="p">(</span><span class="n">rt_mq_t</span>    <span class="n">mq</span><span class="p">,</span>
+                    <span class="kt">void</span>      <span class="o">*</span><span class="n">buffer</span><span class="p">,</span>
+                    <span class="n">rt_size_t</span>  <span class="n">size</span><span class="p">,</span>
+                    <span class="n">rt_int32_t</span> <span class="n">timeout</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<p>接收消息时，接收者需指定存储消息的消息队列对象句柄，并且指定一个内存缓冲区，接受到的消息内容将被复制到该缓冲区里。
+此外还需指定未能及时取到消息时的超时时间。</p>
+<p>接收一个消息后，消息队列上的队首信息被转移到了空闲消息链表的尾部。</p>
+<ul class="simple">
+<li><p>mq 消息队列对象的句柄</p></li>
+<li><p>buffer 消息内容</p></li>
+<li><p>size 消息大小</p></li>
+<li><p>timeout 超时时间</p></li>
+</ul>
+<p>返回值：</p>
+<ul class="simple">
+<li><p>RT_EOK 成功</p></li>
+<li><p>-RT_ETIMEOUT 超时</p></li>
+<li><p>-RT_ERROR 失败，返回错误</p></li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="Synchronize.html" class="btn btn-neutral float-left" title="线程间同步" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> 上一页</a>
+        <a href="../Fast_DDS/Fast_DDS_1.html" class="btn btn-neutral float-right" title="Fast-DDS" accesskey="n" rel="next">下一页 <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; 版权所有 xdt,海南大学.</p>
+  </div>
+
+  利用 <a href="https://www.sphinx-doc.org/">Sphinx</a> 构建，使用了 
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">主题</a>
+    由 <a href="https://readthedocs.org">Read the Docs</a>开发.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
